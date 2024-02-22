@@ -13,7 +13,7 @@ html {
 body {
   font-family: 'Lora', 'Times New Roman', serif;
   font-size: 1.125rem;
-  color: {{ site.text-col | default: "#404040" }};
+  color: {{ site.text-col | default: "#FEFDEB" }};
   position: relative;
   background-color: {{ site.page-col | default: "#FFFFFF" }};
   {% if site.page-img %}
@@ -53,7 +53,7 @@ h1, h2, h3, h4 {
   margin-top: 1.25rem;
 }
 a {
-  color: {{ site.link-col | default: "#008AFF" }};
+  color: {{ site.link-col | default: "#FEFDEB" }};
 }
 a:hover,
 a:focus {
@@ -469,7 +469,7 @@ footer .footer-custom-content {
 .post-preview a {
   text-decoration: none;
   font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  color: {{ site.text-col | default: "#404040" }};
+  color: {{ site.text-col | default: "#FEFDEB" }};
 }
 
 .post-preview a:focus,
@@ -781,9 +781,9 @@ nav.top-nav-short-permanent ~ header > .intro-header.big-img {
   font-weight: 800;
   letter-spacing: 1px;
   padding: 0.625rem 0.3125rem;
-  background-color: #FFF;
+  background-color: #FC5768;
   border-radius: 0;
-  color: {{ site.text-col | default: "#404040" }};
+  color: {{ site.text-col | default: "#FEFDEB" }};
   padding: 0.75rem 1rem;
 }
 @media (min-width: 768px) {

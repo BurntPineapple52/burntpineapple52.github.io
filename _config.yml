@@ -21,10 +21,12 @@ author: BurntPineapple52
 
 navbar-links:
   About Me: "aboutme"
-  Resources:
-    - Beautiful Jekyll: "https://beautifuljekyll.com"
-    - Learn markdown: "https://www.markdowntutorial.com/"
-  Author's home: "https://deanattali.com"
+  Games:
+    - Hungry Hungry Gungah: "2024-02-21-hungry-hungry-gungah-game"
+    - Game List: "2024-02-21-game-list"
+  Favorite Recipes:
+    - 4 ingredient bread: "https://sallysbakingaddiction.com/homemade-artisan-bread/"
+    - Coconut Chicken Curry: "https://www.chelseasmessyapron.com/coconut-chicken-curry/"
 
 ################
 # --- Logo --- #
@@ -132,14 +134,14 @@ navbar-var-length: false
 
 # Personalize the colours in your website. Colour values can be any valid CSS colour
 
-navbar-col: "#EAEAEA"
-navbar-text-col: "#404040"
-navbar-border-col: "#DDDDDD"
-page-col: "#FFFFFF"
-text-col: "#404040"
-link-col: "#008AFF"
+navbar-col: "#B8C3ED"
+navbar-text-col: "#181425"
+navbar-border-col: "#181425"
+page-col: "#181425"
+text-col: "#FEFDEB"
+link-col: "#FC5768"
 hover-col: "#0085A1"
-footer-col: "#EAEAEA"
+footer-col: "#B8C3ED"
 footer-text-col: "#777777"
 footer-link-col: "#404040"
 footer-hover-col: "#0085A1"
