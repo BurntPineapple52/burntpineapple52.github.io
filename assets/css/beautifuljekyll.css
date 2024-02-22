@@ -39,11 +39,11 @@ h1,h2,h3,h4,h5,h6 {
 }
 h1 {
   font-size: 2.25rem;
-  color: #FC5768;
+  color: #fefdeb;
 }
 h2 {
   font-size: 1.875rem;
-  color: #FC5768;
+  color: #fefdeb;
 }
 h3 {
   font-size: 1.5rem;
@@ -488,6 +488,7 @@ footer .footer-custom-content {
   margin: 0;
   font-weight: 300;
   margin-bottom: 0.625rem;
+  color: #B8C3ED;
 }
 .post-preview .post-meta,
 .post-heading .post-meta {
@@ -641,6 +642,7 @@ footer .footer-custom-content {
 .intro-header {
   margin: 5rem 0 1.25rem;
   position: relative;
+  margin-bottom: 100px;
 }
 .intro-header.big-img {
   background: no-repeat center center;
@@ -696,6 +698,7 @@ nav.top-nav-short-permanent ~ header > .intro-header.big-img {
   font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 300;
   margin: 0.625rem 0 0;
+  color: #B8C3ED;
 }
 .intro-header .post-heading .post-subheading {
   margin-bottom: 1.25rem;
