@@ -2,9 +2,9 @@
 layout: post
 title: Hungry Hungry Gungah
 subtitle: Currently in development
-cover-img: /assets/img/path.jpg
+cover-img: /assets/img/path.png
 thumbnail-img: /assets/img/thumb.png
-share-img: /assets/img/path.jpg
+share-img: /assets/img/path.png
 tags: [books, test]
 author: BurntPineapple
 full-width: true
