@@ -10,6 +10,8 @@ We at Goon Studio strive to provide our players with some of the most specifical
 
 What else could you desire?
 
-### My story
+### The story
 
 Fed up with the unrelenting swarm of average games and OK jobs, BurntPineapple is setting out to make money from the masses in a way that doesn't destroy the soul.  Well, his soul anyways. 
+
+Now, if he can just figure out how to actually make money...

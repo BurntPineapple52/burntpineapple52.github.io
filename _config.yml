@@ -20,7 +20,7 @@ author: BurntPineapple52
 ###############################################
 
 navbar-links:
-  About Me: "aboutme"
+  About: "aboutme"
   Games:
     - Hungry Hungry Gungah: "2024-02-21-hungry-hungry-gungah-game"
     - Game List: "2024-02-21-game-list"
