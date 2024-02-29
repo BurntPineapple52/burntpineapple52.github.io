@@ -12,6 +12,8 @@ full-width: true
 
 ## Hungry Hungry Gungah
 
+Inspired by the wonderful [Twitch streamer Gungah!](https://www.twitch.tv/gungah)
+
 This is the game, play it!
 
 <iframe src="/assets/games/hungry-hungry-gungah/index.html" width="1280" height="720" frameborder="0"></iframe>
