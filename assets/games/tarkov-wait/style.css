@@ -1,0 +1,84 @@
+/* style.css */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding-top: 50px;
+    background-color: #121212; /* Dark background for the body */
+    color: #ffffff; /* Light text color for better readability on dark background */
+}
+
+#calculator {
+    display: flex;
+    background-color: #1f1f1f; /* Darker background for the calculator */
+    flex-direction: column;
+    align-items: center;
+    width: 80%;
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Optional: Adding subtle shadow for depth */
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+}
+
+input, select, button {
+    width: 70%;
+    padding: 8px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    border: 1px solid #555;
+    background-color: #2a2a2a; /* Input and Button background */
+    color: #ddd; /* Text color for inputs and button */
+}
+input {
+    width: 20%;
+}
+
+button {
+    width: 85%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #555;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+#results {
+    margin-top: 20px;
+    background-color: #242424; /* Result background */
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#results p:hover {
+    background-color: #2d2d2d;
+}
+
+.result {
+    background: #333; /* Background color */
+    color: #fff; /* Text color */
+    padding: 10px;
+    margin-top: 10px; /* Space between results */
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.result > div:first-child {
+    font-weight: bold; /* Bold label text */
+    margin-bottom: 5px; /* Space between label and value */
+}
+
+.result > div:last-child {
+    font-size: 1.1em; /* Larger font size for value */
+}

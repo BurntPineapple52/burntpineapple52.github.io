@@ -1,0 +1,26 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarkov Wait Time</title>
+    <link rel="stylesheet" href="style.css"> <!-- Link to CSS file -->
+</head>
+<body>
+    <div id="calculator">
+        <h2>Tarkov Wait Time</h2>
+        <p>Estimate how long Tarkov makes you wait on a loading screen!</p>
+        <label for="gameMode">Select Game Mode:</label>
+        <select id="gameMode">
+            <option value="PMC">PMC (2.5 min - 5 min)</option>
+            <option value="Scav">Scav (2.5 min - 10 min)</option>
+        </select>
+        <label for="numMatches">Number of Matches:</label>
+        <input type="number" id="numMatches" value="1" min="1">
+        <button onclick="calculateWaitTimes()">Calculate</button>
+        <div id="results">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+    <script src="script.js"></script> <!-- Link to JavaScript file -->
+</body>
+</html>
