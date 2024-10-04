@@ -4,6 +4,7 @@ title: Tarkov Waiting Calculator
 subtitle: How long are you waiting on Tarkov?
 tags: [tarkov, waiting]
 author: BurntPineapple
+published: false
 ---
 
 <link rel="stylesheet" href="/assets/games/tarkov-wait/style.css">
