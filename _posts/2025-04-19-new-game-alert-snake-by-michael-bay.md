@@ -12,6 +12,6 @@ Get ready for SNAKE by Michael Bay - where every move could be your last! This i
 
 Play as a highly trained explosive snake navigating through dangerous territory. Collect power-ups while avoiding your own tail and... did we mention the explosions?
 
-<iframe src="/games/snake-by-michael-bay/index.html" width="800" height="600" frameborder="0" allowfullscreen></iframe>
+<iframe src="/assets/games/snake-by-michael-bay/index.html" width="800" height="600" frameborder="0" allowfullscreen></iframe>
 
 Warning: May contain excessive explosions and slow-motion fruit collection sequences.
