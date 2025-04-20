@@ -1,307 +1,308 @@
-import CONFIG from './config.js';
-import InputHandler from './input-handler.js';
-import ScoreManager from './score-manager.js';
-import ExplosionManager from './explosion-manager.js';
-import { ParticleSystem } from './particle-system.js';
+// --- DOM Elements ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const scoreElement = document.getElementById('score');
+const highScoreElement = document.getElementById('highScore');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const finalScoreElement = document.getElementById('finalScore');
+const newHighScoreMsg = document.getElementById('newHighScoreMsg');
+const restartButton = document.getElementById('restartButton');
+const startScreen = document.getElementById('startScreen');
+const startButton = document.getElementById('startButton');
+const gameContainer = document.querySelector('.game-container'); // For shake
 
-class SnakeGame {
-    constructor() {
-        this.canvas = document.getElementById('game-canvas');
-        this.ctx = this.canvas.getContext('2d');
-        this.inputHandler = new InputHandler();
-        this.scoreManager = new ScoreManager();
-        this.particleSystem = new ParticleSystem();
-        this.explosionManager = new ExplosionManager(this, this.particleSystem);
-        this.slowdownFactor = 1; // Temporary slowdown multiplier
-        this.gameState = {
-            snake: [],
-            direction: 'RIGHT',
-            food: null,
-            gameOver: false,
-            paused: false
-        };
-        this.lastUpdateTime = 0;
-        this.animationFrameId = null;
+// --- Canvas Setup ---
+canvas.width = CANVAS_WIDTH;
+canvas.height = CANVAS_HEIGHT;
 
-        this.initCanvas();
-        this.resetGame();
-        this.startGameLoop();
-    }
+// --- Game State ---
+let snake;
+let food;
+let score;
+let highScore;
+let currentSpeedMs;
+let gameLoopTimeout;
+let lastTickTime;
+let accumulatedTime;
+let explosions = [];
+let gameState = 'start'; // 'start', 'playing', 'slowMo', 'gameOver'
+let slowMoTimer = 0;
+let globalShakeState = { timer: 0, intensity: 0 }; // Global shake control
 
-    initCanvas() {
-        this.canvas.width = CONFIG.CANVAS_WIDTH;
-        this.canvas.height = CONFIG.CANVAS_HEIGHT;
-    }
+// --- Initialization ---
+function loadHighScore() {
+    const savedScore = localStorage.getItem(HIGH_SCORE_KEY);
+    highScore = savedScore ? parseInt(savedScore, 10) : 0;
+    highScoreElement.textContent = highScore;
+}
 
-    resetGame() {
-        this.gameState = {
-            snake: this.createInitialSnake(),
-            direction: 'RIGHT',
-            food: this.generateFood(),
-            gameOver: false,
-            paused: false
-        };
-        this.scoreManager.reset();
-        this.inputHandler.reset();
-    }
+function saveHighScore() {
+    localStorage.setItem(HIGH_SCORE_KEY, highScore.toString());
+}
 
-    createInitialSnake() {
-        const snake = [];
-        const startX = Math.floor(CONFIG.GRID_WIDTH / 3);
-        const startY = Math.floor(CONFIG.GRID_HEIGHT / 2);
+function resetGame() {
+    if (gameLoopTimeout) clearTimeout(gameLoopTimeout);
 
-        for (let i = 0; i < CONFIG.INITIAL_SNAKE_LENGTH; i++) {
-            snake.push({ x: startX - i, y: startY });
-        }
+    snake = new Snake();
+    food = new Food();
+    food.randomizePosition(snake.segments); // Initial food placement
+    score = 0;
+    currentSpeedMs = BASE_SPEED_MS;
+    explosions = [];
+    accumulatedTime = 0;
+    lastTickTime = performance.now();
+    slowMoTimer = 0;
+    globalShakeState = { timer: 0, intensity: 0 };
 
-        return snake;
-    }
+    scoreElement.textContent = score;
+    gameOverScreen.classList.add('hidden');
+    newHighScoreMsg.classList.add('hidden');
+    startScreen.classList.add('hidden');
+    canvas.style.filter = 'none'; // Remove any filters like blur
+    gameContainer.style.transform = 'none'; // Reset container transform
+}
 
-    generateFood() {
-        const food = {
-            x: Math.floor(Math.random() * CONFIG.GRID_WIDTH),
-            y: Math.floor(Math.random() * CONFIG.GRID_HEIGHT)
-        };
+function startGame() {
+    resetGame();
+    gameState = 'playing';
+    requestAnimationFrame(gameLoop); // Use rAF for smoother animations
+}
 
-        // Ensure food doesn't spawn on snake
-        const isOnSnake = this.gameState.snake.some(segment => 
-            segment.x === food.x && segment.y === food.y
-        );
-
-        return isOnSnake ? this.generateFood() : food;
-    }
-
-    startGameLoop() {
-        const FPS = CONFIG.TIME_SETTINGS.BASE_FPS || 60;
-        const FRAME_TIME = 1000 / FPS;
-        let lastTime = performance.now();
-        let accumulator = 0;
-        this.callbackCount = 0;
-        this.movementCounter = 0;
-
-        const gameLoop = (currentTime) => {
-            this.callbackCount++;
-            if (this.callbackCount % 60 === 0) {
-                console.log(`Animation frame callbacks: ${this.callbackCount}`);
-            }
-
-            if (this.gameState.gameOver || this.gameState.paused) {
-                return;
-            }
-
-            // Calculate deltaTime since last frame, capped at 100ms to prevent spiral of death
-            let deltaTime = Math.min(currentTime - lastTime, 100);
-            lastTime = currentTime;
-            accumulator += deltaTime;
-
-            // Fixed timestep updates
-            while (accumulator >= FRAME_TIME) {
-                this.movementCounter++;
-                if (this.movementCounter >= CONFIG.TIME_SETTINGS.SYSTEMS.MOVEMENT_DELAY) {
-                    this.update(FRAME_TIME * CONFIG.TIME_SETTINGS.SYSTEMS.MOVEMENT_DELAY);
-                    this.movementCounter = 0;
-                }
-                accumulator -= FRAME_TIME;
-            }
-
-            this.render();
-            this.animationFrameId = requestAnimationFrame(gameLoop);
-        };
-
-        this.animationFrameId = requestAnimationFrame(gameLoop);
-        console.log('Game loop started - initial callback registered');
-    }
-
-    update(deltaTime) {
-        console.log(`Game update called with deltaTime: ${deltaTime}`);
-        // Update explosion effects with raw deltaTime (particle system handles its own timing)
-        this.explosionManager.update(deltaTime);
-        // Update particle system (including floating text)
-        this.particleSystem.update(deltaTime);
-        const newDirection = this.inputHandler.getDirection();
-        if (newDirection) {
-            this.gameState.direction = newDirection;
-        }
-
-        const head = {...this.gameState.snake[0]};
-
-        // Move head based on direction
-        switch (this.gameState.direction) {
-            case 'UP': head.y -= 1; break;
-            case 'DOWN': head.y += 1; break;
-            case 'LEFT': head.x -= 1; break;
-            case 'RIGHT': head.x += 1; break;
-        }
-
-        // Check collisions
-        if (this.checkCollision(head)) {
-            this.gameState.gameOver = true;
-            this.scoreManager.saveHighScore();
-            // Trigger explosion at snake head position
-            const head = this.gameState.snake[0];
-            this.explosionManager.triggerExplosion(
-                { x: head.x * CONFIG.CELL_SIZE, y: head.y * CONFIG.CELL_SIZE },
-                'default'
-            );
-            return;
-        }
-
-        // Add new head
-        this.gameState.snake.unshift(head);
-
-        // Check food collision
-        if (head.x === this.gameState.food.x && head.y === this.gameState.food.y) {
-            this.scoreManager.addPoints(CONFIG.SCORE_PER_FOOD);
-            // Trigger food explosion and score text effect
-            const foodPos = {
-                x: (this.gameState.food.x + 0.5) * CONFIG.CELL_SIZE,
-                y: (this.gameState.food.y + 0.5) * CONFIG.CELL_SIZE
-            };
-            
-            // Create explosion
-            this.explosionManager.triggerExplosion(foodPos, 'food');
-            
-            // Create floating score text
-            const scoreValue = `+${CONFIG.SCORE_PER_FOOD}`;
-            const textConfig = CONFIG.SCORE_PER_FOOD >= 100
-                ? CONFIG.FLOATING_TEXT.highValue
-                : CONFIG.FLOATING_TEXT.lowValue;
-            this.particleSystem.createTextEffect(
-                foodPos.x,
-                foodPos.y,
-                scoreValue,
-                textConfig
-            );
-            
-            // Generate new food
-            this.gameState.food = this.generateFood();
-        } else {
-            // Remove tail if no food eaten
-            this.gameState.snake.pop();
-        }
-    }
-
-    checkCollision(head) {
-        // Wall collision
-        if (head.x < 0 || head.x >= CONFIG.GRID_WIDTH || 
-            head.y < 0 || head.y >= CONFIG.GRID_HEIGHT) {
-            return true;
-        }
-
-        // Self collision
-        return this.gameState.snake.some((segment, index) => 
-            index > 0 && segment.x === head.x && segment.y === head.y
-        );
-    }
-
-    render() {
-        // Apply screen shake offset
-        const shakeOffset = this.explosionManager.getShakeOffset();
-        this.ctx.save();
-        this.ctx.translate(shakeOffset.x, shakeOffset.y);
-
-        // Clear canvas
-        this.ctx.fillStyle = CONFIG.COLORS.BACKGROUND;
-        this.ctx.fillRect(
-            -Math.abs(shakeOffset.x),
-            -Math.abs(shakeOffset.y),
-            this.canvas.width + Math.abs(shakeOffset.x) * 2,
-            this.canvas.height + Math.abs(shakeOffset.y) * 2
-        );
-
-        // Draw grid
-        this.ctx.strokeStyle = CONFIG.COLORS.GRID_LINES;
-        this.ctx.lineWidth = 0.5;
-        for (let x = 0; x <= CONFIG.GRID_WIDTH; x++) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(x * CONFIG.CELL_SIZE, 0);
-            this.ctx.lineTo(x * CONFIG.CELL_SIZE, CONFIG.GRID_HEIGHT * CONFIG.CELL_SIZE);
-            this.ctx.stroke();
-        }
-        for (let y = 0; y <= CONFIG.GRID_HEIGHT; y++) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, y * CONFIG.CELL_SIZE);
-            this.ctx.lineTo(CONFIG.GRID_WIDTH * CONFIG.CELL_SIZE, y * CONFIG.CELL_SIZE);
-            this.ctx.stroke();
-        }
-
-        // Render particle effects
-        this.particleSystem.render(this.ctx);
-
-        // Draw snake
-        this.gameState.snake.forEach((segment, index) => {
-            this.ctx.fillStyle = index === 0 ? CONFIG.COLORS.SNAKE_HEAD : CONFIG.COLORS.SNAKE;
-            this.ctx.fillRect(
-                segment.x * CONFIG.CELL_SIZE,
-                segment.y * CONFIG.CELL_SIZE,
-                CONFIG.CELL_SIZE,
-                CONFIG.CELL_SIZE
-            );
-        });
-
-        // Draw food
-        this.ctx.fillStyle = CONFIG.COLORS.FOOD;
-        this.ctx.beginPath();
-        this.ctx.arc(
-            (this.gameState.food.x + 0.5) * CONFIG.CELL_SIZE,
-            (this.gameState.food.y + 0.5) * CONFIG.CELL_SIZE,
-            CONFIG.CELL_SIZE / 2 - 2,
-            0,
-            Math.PI * 2
-        );
-        this.ctx.fill();
-
-        // Game over overlay handled by HTML/CSS now
-        this.ctx.restore();
-
-        // Render explosions
-        this.explosionManager.activeExplosions.forEach(explosion => {
-            explosion.particles.forEach(particle => {
-                if (particle.life > 0) {
-                    this.ctx.fillStyle = particle.color;
-                    this.ctx.globalAlpha = particle.life / 1000;
-                    this.ctx.fillRect(
-                        particle.x - particle.size / 2,
-                        particle.y - particle.size / 2,
-                        particle.size,
-                        particle.size
-                    );
-                    this.ctx.globalAlpha = 1;
-                }
-            });
-        });
-
-        if (this.gameState.gameOver) {
-            const overlay = document.getElementById('game-over-overlay');
-            overlay.classList.remove('hidden');
-            document.getElementById('final-score').textContent = this.scoreManager.currentScore;
-            document.getElementById('final-high-score').textContent = this.scoreManager.highScore;
-        }
+function triggerSlowMotion(duration = SLOW_MOTION_DURATION_MS) {
+    if (gameState !== 'gameOver') { // Don't enter slowmo if already game over
+       // gameState = 'slowMo'; // We handle slowmo timing directly now
+       slowMoTimer = duration;
     }
 }
 
-// Start the game when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    const game = new SnakeGame();
-    
-    // Handle retry button click
-    document.getElementById('retry-button').addEventListener('click', () => {
-        document.getElementById('game-over-overlay').classList.add('hidden');
-        // Cancel existing game loop
-        if (game.animationFrameId) {
-            cancelAnimationFrame(game.animationFrameId);
-        }
-        // Reset game state
-        game.resetGame();
-        // Restart game loop
-        game.startGameLoop();
-    });
+function triggerExplosion(x, y, isBig = false) {
+    explosions.push(new Explosion(x, y));
+    // Trigger screen shake
+    globalShakeState.timer = isBig ? 300 : 150; // Longer shake for bigger explosions
+    globalShakeState.intensity = isBig ? 8 : 4;
+}
 
-    // Add slowdown method to SnakeGame class
-    SnakeGame.prototype.slowdownGame = function() {
-        this.slowdownFactor = 0.3;
-        setTimeout(() => {
-            this.slowdownFactor = 1;
-        }, 500);
-    };
-});
+// --- Game Loop ---
+function gameLoop(currentTime) {
+    if (gameState === 'start') {
+         drawStartScreen(); // Keep drawing start screen until button press
+         requestAnimationFrame(gameLoop);
+         return;
+    }
+     if (gameState === 'gameOver') {
+        // Continue drawing explosions and game over screen
+        const deltaTime = currentTime - lastTickTime;
+        lastTickTime = currentTime;
+
+        updateExplosions(deltaTime);
+        drawGameOver(); // Includes drawing background and explosions
+        requestAnimationFrame(gameLoop); // Keep animating explosions
+        return;
+    }
+
+
+    const deltaTime = currentTime - lastTickTime;
+    lastTickTime = currentTime;
+    accumulatedTime += deltaTime;
+
+    // --- Slow Motion Handling ---
+    let effectiveSpeed = currentSpeedMs;
+    if (slowMoTimer > 0) {
+        slowMoTimer -= deltaTime;
+        effectiveSpeed *= SLOW_MOTION_FACTOR; // Make the *required* time longer
+        if (slowMoTimer <= 0) {
+            slowMoTimer = 0;
+            // gameState = 'playing'; // Revert state if needed (handled implicitly now)
+        }
+    }
+
+     // --- Global Shake Update ---
+    if (globalShakeState.timer > 0) {
+        globalShakeState.timer -= deltaTime;
+    }
+
+    // --- Game Logic Update (runs at intervals based on speed) ---
+    if (accumulatedTime >= effectiveSpeed) {
+        accumulatedTime -= effectiveSpeed; // Consume the time for this tick
+
+        if (gameState === 'playing' || gameState === 'slowMo') { // Only move if playing
+             const collision = snake.move();
+
+            if (collision) {
+                handleGameOver(true); // Player caused game over
+            } else {
+                // Check for food collision
+                const head = snake.getHead();
+                if (head.x === food.x && head.y === food.y) {
+                    handleFoodEaten();
+                }
+            }
+        }
+    }
+
+    // --- Drawing (runs every frame) ---
+    drawGame(deltaTime);
+
+    // --- Loop ---
+    requestAnimationFrame(gameLoop);
+}
+
+function handleFoodEaten() {
+    score++;
+    scoreElement.textContent = score;
+    snake.grow();
+    const foodPos = food.getPixelPosition();
+    food.randomizePosition(snake.segments);
+
+    // Speed up
+    currentSpeedMs = Math.max(MIN_SPEED_MS, currentSpeedMs * SPEED_INCREMENT_FACTOR);
+
+    // Michael Bay effect!
+    triggerExplosion(foodPos.x, foodPos.y);
+    triggerSlowMotion();
+}
+
+function handleGameOver(playerDied) {
+    gameState = 'gameOver';
+    const headPos = snake.getHeadPixelPosition();
+
+    // Big explosion on death
+    triggerExplosion(headPos.x, headPos.y, true); // 'true' for big explosion/shake
+    triggerSlowMotion(EXPLOSION_DURATION_MS); // Slow-mo during death explosion
+
+    finalScoreElement.textContent = score;
+    let isNewHighScore = false;
+    if (score > highScore) {
+        highScore = score;
+        highScoreElement.textContent = highScore;
+        saveHighScore();
+        newHighScoreMsg.classList.remove('hidden');
+        isNewHighScore = true;
+        // Optional: Trigger another, perhaps different, explosion for high score
+        // setTimeout(() => triggerExplosion(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2, true), 500); // Delayed center explosion
+    }
+
+    gameOverScreen.classList.remove('hidden');
+     // Optional: Add a blur effect to the canvas behind the game over screen
+    // canvas.style.filter = 'blur(5px)';
+}
+
+
+function updateExplosions(deltaTime) {
+     let effectiveDeltaTime = deltaTime;
+     // Explosions also run slower during general slow-mo
+     if (slowMoTimer > 0) {
+         effectiveDeltaTime /= SLOW_MOTION_FACTOR;
+     }
+
+    explosions.forEach(exp => exp.update(effectiveDeltaTime));
+    explosions = explosions.filter(exp => !exp.isFinished);
+}
+
+// --- Drawing Functions ---
+function drawGame(deltaTime) {
+    ctx.save(); // Save context state before potential shake translation
+
+    // Apply Screen Shake
+    if (globalShakeState.timer > 0) {
+        const intensity = globalShakeState.intensity * (globalShakeState.timer / (globalShakeState.intensity === 8 ? 300 : 150)); // Fade shake
+        const offsetX = getRandomFloat(-intensity, intensity);
+        const offsetY = getRandomFloat(-intensity, intensity);
+        ctx.translate(offsetX, offsetY);
+        // Also apply to container for UI elements if desired
+        gameContainer.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+    } else {
+         gameContainer.style.transform = 'none'; // Ensure reset when shake ends
+    }
+
+
+    // Clear canvas
+    ctx.fillStyle = BACKGROUND_COLOR;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // Draw Food
+    food.draw(ctx);
+
+    // Draw Snake
+    snake.draw(ctx);
+
+    // Update and Draw Explosions
+    updateExplosions(deltaTime); // Update based on frame time
+    explosions.forEach(exp => exp.draw(ctx));
+
+    ctx.restore(); // Restore context state, removing shake translation
+}
+
+function drawGameOver() {
+     ctx.save(); // Save context state
+
+     // Apply ongoing shake if any
+     if (globalShakeState.timer > 0) {
+        const intensity = globalShakeState.intensity * (globalShakeState.timer / (globalShakeState.intensity === 8 ? 300 : 150));
+        const offsetX = getRandomFloat(-intensity, intensity);
+        const offsetY = getRandomFloat(-intensity, intensity);
+        ctx.translate(offsetX, offsetY);
+        gameContainer.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+     } else {
+         gameContainer.style.transform = 'none';
+     }
+
+    // Draw semi-transparent background overlay if not using the HTML overlay
+    // ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    // ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+     // Draw background elements (like a static snake/food if desired)
+     ctx.fillStyle = BACKGROUND_COLOR;
+     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+     if(snake) snake.draw(ctx); // Draw final snake position
+     if(food) food.draw(ctx);   // Draw final food position
+
+
+    // Draw remaining explosions
+    explosions.forEach(exp => exp.draw(ctx));
+
+    ctx.restore(); // Restore context state
+
+    // The HTML overlay (#gameOverScreen) is displayed separately
+}
+
+function drawStartScreen() {
+    ctx.fillStyle = BACKGROUND_COLOR;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    // Optionally draw some static elements like a title on the canvas itself
+    // ctx.fillStyle = TEXT_COLOR;
+    // ctx.font = '30px Arial';
+    // ctx.textAlign = 'center';
+    // ctx.fillText('Michael Bay Snake', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 3);
+}
+
+
+// --- Event Listeners ---
+function handleKeyDown(e) {
+    if (gameState !== 'playing' && gameState !== 'slowMo') return; // Only allow input during play/slowmo
+
+    switch (e.key) {
+        case 'ArrowUp':
+            if (snake.direction.y === 0) snake.changeDirection(0, -1);
+            break;
+        case 'ArrowDown':
+            if (snake.direction.y === 0) snake.changeDirection(0, 1);
+            break;
+        case 'ArrowLeft':
+            if (snake.direction.x === 0) snake.changeDirection(-1, 0);
+            break;
+        case 'ArrowRight':
+            if (snake.direction.x === 0) snake.changeDirection(1, 0);
+            break;
+    }
+}
+
+document.addEventListener('keydown', handleKeyDown);
+restartButton.addEventListener('click', startGame);
+startButton.addEventListener('click', startGame);
+
+// --- Initial Load ---
+loadHighScore();
+// Don't start game loop immediately, wait for start button
+gameState = 'start';
+requestAnimationFrame(gameLoop); // Start the loop to show the start screen

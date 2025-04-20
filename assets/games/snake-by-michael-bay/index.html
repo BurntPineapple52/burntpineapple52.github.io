@@ -3,22 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game</title>
+    <title>Michael Bay Snake</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <h1>Michael Bay Snake</h1>
     <div class="game-container">
-        <canvas id="game-canvas"></canvas>
-        <div class="score-display">Score: <span id="score">0</span></div>
-        <div class="high-score-display">High Score: <span id="high-score">0</span></div>
-        
-        <div id="game-over-overlay" class="hidden">
-            <h2>Game Over</h2>
-            <p>Your Score: <span id="final-score">0</span></p>
-            <p>High Score: <span id="final-high-score">0</span></p>
-            <button id="retry-button">Play Again</button>
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui">
+            <div>Score: <span id="score">0</span></div>
+            <div>High Score: <span id="highScore">0</span></div>
+        </div>
+        <div id="gameOverScreen" class="hidden">
+            <h2>GAME OVER</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p id="newHighScoreMsg" class="hidden">💥 NEW HIGH SCORE! 💥</p>
+            <button id="restartButton">Restart</button>
+        </div>
+         <div id="startScreen">
+            <h2>Get Ready!</h2>
+            <p>Use Arrow Keys to Move</p>
+            <button id="startButton">Start Game</button>
         </div>
     </div>
-    <script type="module" src="game.js"></script>
+
+    <!-- Load Scripts -->
+    <script src="constants.js"></script>
+    <script src="utils.js"></script>
+    <script src="explosion.js"></script>
+    <script src="snake.js"></script>
+    <script src="food.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
