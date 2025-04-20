@@ -1,17 +1,27 @@
 ---
 layout: post
-title: New Game Alert! SNAKE by Michael Bay!
-subtitle: Explosive snake action!
-tags: [game, snake, michael bay]
+title: "New Game Alert: Snake by Michael Bay"
+subtitle: "Classic Snake with... more explosions!"
+tags: [games, announcement, javascript]
 author: BurntPineapple
+date: 2025-04-19 # Adjust this date if needed
 ---
 
-# The Most Explosive Snake Game Ever!
+Get ready for some explosive fun! I've added a new game to the site: **Snake by Michael Bay**.
 
-Get ready for SNAKE by Michael Bay - where every move could be your last! This isn't your grandma's snake game. We're talking explosions, dramatic camera angles, and more action than you can handle.
+It's the classic snake game you remember, but with a slightly more... *intense* twist. Use your arrow keys to navigate, grab the food, and try not to crash.
 
-Play as a highly trained explosive snake navigating through dangerous territory. Collect power-ups while avoiding your own tail and... did we mention the explosions?
+Play it right here:
 
-<iframe src="/assets/games/snake-by-michael-bay/index.html" width="800" height="600" frameborder="0" allowfullscreen></iframe>
+<div style="text-align: center; margin: 20px 0;">
+  <iframe 
+    src="/assets/games/snake-by-michael-bay/index.html" 
+    width="620" 
+    height="500" 
+    style="border: 1px solid #ccc;" 
+    title="Snake by Michael Bay Game">
+    Your browser does not support iframes. You can play the game directly <a href="/assets/games/snake-by-michael-bay/index.html">here</a>.
+  </iframe>
+</div>
 
-Warning: May contain excessive explosions and slow-motion fruit collection sequences.
+Let me know what high score you get!
