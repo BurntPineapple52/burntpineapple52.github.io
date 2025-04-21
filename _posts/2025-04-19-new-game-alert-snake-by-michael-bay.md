@@ -16,7 +16,7 @@ Play it right here:
 <div style="text-align: center; margin: 20px 0;">
   <iframe 
     src="/assets/games/snake-by-michael-bay/index.html" 
-    style="border: none; width: 100%; max-width: 100%; min-height: 500px;" 
+    style="border: none; width: 100%; max-width: 100%; min-height: 800px;" 
     title="Snake by Michael Bay Game">
     Your browser does not support iframes. You can play the game directly <a href="/assets/games/snake-by-michael-bay/index.html">here</a>.
   </iframe>
