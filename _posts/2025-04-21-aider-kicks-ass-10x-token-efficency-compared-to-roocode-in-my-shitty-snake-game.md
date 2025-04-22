@@ -34,4 +34,4 @@ Biggest lesson? You don't need massive context windows or expensive models to bu
 
 Check out both games here:
 - [Snake by Michael Bay](/assets/games/snake-by-michael-bay/) (RooCode)
-- [Vulgar Snake](/assets/games/vulgar-snake/) (aider)
+- [Vulgar Snake](/assets/games/vulgar-snake-by-aider/) (aider)
