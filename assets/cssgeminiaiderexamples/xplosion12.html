@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Improved Canvas Explosion (Color Cooldown)</title>
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #111; /* Darker background */
+            overflow: hidden;
+            color: #aaa;
+        }
+        canvas {
+            border: 1px solid #222; /* Slightly darker border */
+            background-color: transparent;
+            /* Glow and filters handled dynamically in JS */
+        }
+        p {
+            position: absolute;
+            bottom: 10px;
+            font-family: sans-serif;
+            text-align: center;
+            width: 100%;
+            opacity: 0.7;
+        }
+         button {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 8px 15px;
+            background-color: #444;
+            color: #eee;
+            border: 1px solid #666;
+            cursor: pointer;
+            transition: background-color 0.2s;
+         }
+         button:hover {
+            background-color: #555;
+         }
+    </style>
+</head>
+<body>
+    <canvas id="explosionCanvas" width="600" height="600"></canvas>
+    <p>Improved Procedural Canvas Explosion (Color Cooldown)</p>
+    <button id="triggerButton">Trigger Explosion</button>
+
+    <script>
+        const canvas = document.getElementById('explosionCanvas');
+        const ctx = canvas.getContext('2d');
+        const triggerButton = document.getElementById('triggerButton');
+
+        // --- Configuration ---
+
+        // Core / Fireball
+        const CORE_LAYERS = 5;
+        const CORE_MAX_RADIUS_INITIAL = 100;
+        const CORE_MAX_RADIUS_FINAL = 150;
+        const CORE_INITIAL_GROWTH_FACTOR = 1.4;
+        const CORE_GROWTH_DECAY = 0.97;
+        const CORE_INITIAL_ALPHA = 1.0;
+        const CORE_FADE_RATE = 0.01; // How fast the layer's *opacity* fades
+        const CORE_LAYER_DELAY = 5;
+        const CORE_COOLING_DURATION = 600; // Milliseconds over which the core color shifts from hot to cool
+
+        // Debris Particles
+        const PARTICLE_COUNT = 150;
+        const PARTICLE_SPAWN_DELAY = 30;
+        const PARTICLE_SPAWN_INITIAL_RADIUS = CORE_MAX_RADIUS_INITIAL * 0.4;
+        const PARTICLE_LIFESPAN_MIN = 120;
+        const PARTICLE_LIFESPAN_MAX = 250;
+        const PARTICLE_INITIAL_SPEED_MIN = 3;
+        const PARTICLE_INITIAL_SPEED_MAX = 9;
+        const PARTICLE_SPEED_DAMPING = 0.97;
+        const PARTICLE_SIZE_MIN = 1;
+        const PARTICLE_SIZE_MAX = 5;
+        const PARTICLE_GRAVITY = 0.05;
+        const PARTICLE_SHRINK_START_LIFE_RATIO = 0.6;
+        const PARTICLE_SHRINK_RATE = 0.99;
+        const SMOKE_TRANSITION_LIFE_RATIO = 0.4;
+
+        // Sparks
+        const SPARK_COUNT = 50;
+        const SPARK_LIFESPAN = 50;
+        const SPARK_INITIAL_SPEED_MIN = 7;
+        const SPARK_INITIAL_SPEED_MAX = 15;
+        const SPARK_LENGTH = 20;
+        const SPARK_DAMPING = 0.95;
+
+        // Shockwave
+        const SHOCKWAVE_ENABLED = true;
+        const SHOCKWAVE_SPEED = 6;
+        const SHOCKWAVE_MAX_RADIUS = 300;
+        const SHOCKWAVE_INITIAL_WIDTH = 5;
+        const SHOCKWAVE_FADE_RATE = 0.03;
+        const SHOCKWAVE_COLOR = { r: 200, g: 180, b: 150 };
+
+        // Effects
+        const SCREEN_SHAKE_INTENSITY = 8;
+        const SCREEN_SHAKE_DURATION = 15;
+        const GLOW_ENABLED = true;
+        const GLOW_INITIAL_BLUR = 15;
+        const GLOW_INITIAL_BRIGHTNESS = 1.8;
+        const GLOW_FADE_RATE = 0.04;
+
+        // --- Colors ---
+        // ** Core colors now represent stages over time: Hot -> Cool **
+        const coreColorStages = [
+            { r: 255, g: 255, b: 255 }, // 0: White Hot
+            { r: 255, g: 255, b: 200 }, // 1: Bright Yellow
+            { r: 255, g: 200, b: 100 }, // 2: Yellow-Orange
+            { r: 255, g: 150, b: 0 },   // 3: Orange
+            { r: 200, g: 80, b: 20 },   // 4: Deep Red/Orange
+            { r: 100, g: 40, b: 10 }    // 5: Dark Red (cooling further)
+        ];
+        const particleColors = [
+            { r: 255, g: 220, b: 180 }, { r: 255, g: 180, b: 80 }, { r: 200, g: 100, b: 50 },
+        ];
+        const smokeColor = { r: 80, g: 80, b: 80 };
+        const sparkColor = { r: 255, g: 255, b: 220 };
+
+        // --- Global State ---
+        let coreLayers = [];
+        let particles = [];
+        let sparks = [];
+        let shockwaves = [];
+        let explosionX = canvas.width / 2;
+        let explosionY = canvas.height / 2;
+        let currentShake = { x: 0, y: 0, duration: 0, intensity: 0, maxDuration: 0 };
+        let currentGlow = { blur: 0, brightness: 1 };
+        let lastTimestamp = 0;
+        let isActive = false;
+        let animationFrameId = null;
+
+        // --- Utility Functions ---
+        function getRandom(min, max) { return Math.random() * (max - min) + min; }
+        function lerp(a, b, t) { return a + (b - a) * Math.max(0, Math.min(1, t)); }
+
+        // --- Classes ---
+        class CoreLayer {
+            constructor(x, y, index, startDelay) {
+                this.x = x;
+                this.y = y;
+                this.index = index; // Layer index (0 = innermost)
+                this.radius = 0.1;
+                this.alpha = CORE_INITIAL_ALPHA; // Layer opacity
+                this.growthRate = CORE_INITIAL_GROWTH_FACTOR;
+                this.maxRadius = lerp(CORE_MAX_RADIUS_INITIAL, CORE_MAX_RADIUS_FINAL, index / (CORE_LAYERS - 1));
+                // No fixed colors assigned here anymore
+                this.startTime = performance.now() + startDelay;
+                this.creationTime = performance.now();
+                this.age = 0; // Time since this layer became active
+            }
+
+            update(now) {
+                if (now < this.startTime) return true; // Not started yet, but keep
+
+                this.age = now - this.startTime;
+
+                // Growth mechanics (same as before)
+                const decayFactor = Math.pow(CORE_GROWTH_DECAY, this.age / 70);
+                this.radius += this.radius * this.growthRate * decayFactor * 0.1 + 0.6;
+                this.growthRate *= decayFactor;
+
+                // Alpha (opacity) fade mechanics (same as before)
+                this.alpha -= CORE_FADE_RATE * (1 + this.index * 0.2);
+
+                return this.alpha > 0; // Keep if layer is still visible
+            }
+
+            draw(ctx) {
+                const now = performance.now();
+                if (now < this.startTime || this.alpha <= 0 || this.radius < 1) return;
+
+                // --- Calculate Color Based on Age (Cooling) ---
+                const coolingProgress = Math.min(1, this.age / CORE_COOLING_DURATION); // 0 (hot) to 1 (cool)
+                const colorIndexFloat = coolingProgress * (coreColorStages.length - 1); // Map progress to color stage index
+                const colorIndex1 = Math.floor(colorIndexFloat);
+                const colorIndex2 = Math.min(coreColorStages.length - 1, colorIndex1 + 1); // Clamp to last index
+                const interpFactor = colorIndexFloat - colorIndex1; // How far between index1 and index2
+
+                const color1 = coreColorStages[colorIndex1];
+                const color2 = coreColorStages[colorIndex2];
+
+                // Interpolate the RGB values for the *current* base color of this layer
+                const currentR = lerp(color1.r, color2.r, interpFactor);
+                const currentG = lerp(color1.g, color2.g, interpFactor);
+                const currentB = lerp(color1.b, color2.b, interpFactor);
+                // --- End Color Calculation ---
+
+                const currentRadius = Math.min(this.radius, this.maxRadius);
+                const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, currentRadius);
+
+                // Use the calculated current color, modulated by the layer's individual alpha
+                // Make the center slightly brighter/hotter by looking slightly back in the color stages (optional but nice)
+                const centerCoolingProgress = Math.max(0, coolingProgress - 0.1 / (this.index + 1)); // Inner layers stay hotter longer at center
+                const centerIndexFloat = centerCoolingProgress * (coreColorStages.length - 1);
+                const centerIndex1 = Math.floor(centerIndexFloat);
+                const centerIndex2 = Math.min(coreColorStages.length - 1, centerIndex1 + 1);
+                const centerInterpFactor = centerIndexFloat - centerIndex1;
+                const centerColor1 = coreColorStages[centerIndex1];
+                const centerColor2 = coreColorStages[centerIndex2];
+                const centerR = lerp(centerColor1.r, centerColor2.r, centerInterpFactor);
+                const centerG = lerp(centerColor1.g, centerColor2.g, centerInterpFactor);
+                const centerB = lerp(centerColor1.b, centerColor2.b, centerInterpFactor);
+
+
+                const centerColorStr = `rgba(${Math.round(centerR)}, ${Math.round(centerG)}, ${Math.round(centerB)}, ${this.alpha * 1.2})`; // Center brighter alpha
+                const currentColorStr = `rgba(${Math.round(currentR)}, ${Math.round(currentG)}, ${Math.round(currentB)}, ${this.alpha})`;
+                const edgeColorStr = `rgba(${Math.round(currentR)}, ${Math.round(currentG)}, ${Math.round(currentB)}, 0)`; // Fade edge to transparent using current color base
+
+                // Gradient stops - tight bright center, fades out
+                grad.addColorStop(0, centerColorStr);
+                grad.addColorStop(0.15 / (this.index * 0.5 + 1), centerColorStr); // Inner layers have smaller bright point
+                grad.addColorStop(0.6, currentColorStr); // Transition to the main current color
+                grad.addColorStop(1, edgeColorStr); // Fade to transparent
+
+                ctx.fillStyle = grad;
+                // Keep additive blending for inner layers for that initial intense flash
+                ctx.globalCompositeOperation = (this.index < CORE_LAYERS / 2 && coolingProgress < 0.5) ? 'lighter' : 'source-over';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, currentRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalCompositeOperation = 'source-over'; // Reset
+            }
+        }
+
+        // --- Particle, Spark, Shockwave classes remain the same ---
+        class Particle {
+            constructor(x, y, fixedSpawnRadius) {
+                const angle = Math.random() * Math.PI * 2;
+                const spawnDist = fixedSpawnRadius * (0.6 + Math.random() * 0.4);
+                this.x = x + Math.cos(angle) * spawnDist;
+                this.y = y + Math.sin(angle) * spawnDist;
+                this.size = getRandom(PARTICLE_SIZE_MIN, PARTICLE_SIZE_MAX);
+                this.initialSize = this.size;
+                this.baseColor = particleColors[Math.floor(Math.random() * particleColors.length)];
+                this.alpha = 0.9 + Math.random() * 0.1;
+                const speed = getRandom(PARTICLE_INITIAL_SPEED_MIN, PARTICLE_INITIAL_SPEED_MAX);
+                this.vx = Math.cos(angle) * speed * getRandom(0.8, 1.2);
+                this.vy = Math.sin(angle) * speed * getRandom(0.8, 1.2);
+                this.lifespan = getRandom(PARTICLE_LIFESPAN_MIN, PARTICLE_LIFESPAN_MAX);
+                this.initialLifespan = this.lifespan;
+                this.lifeRatio = 0;
+                this.isSmoke = false;
+                this.smokeFactor = 0;
+            }
+            update() {
+                this.vx *= PARTICLE_SPEED_DAMPING; this.vy *= PARTICLE_SPEED_DAMPING;
+                this.x += this.vx; this.y += this.vy; this.vy += PARTICLE_GRAVITY;
+                this.lifespan--; this.lifeRatio = 1 - (this.lifespan / this.initialLifespan);
+                if (this.lifeRatio > SMOKE_TRANSITION_LIFE_RATIO) {
+                    this.isSmoke = true;
+                    this.smokeFactor = (this.lifeRatio - SMOKE_TRANSITION_LIFE_RATIO) / (1 - SMOKE_TRANSITION_LIFE_RATIO);
+                    this.vx *= 0.98;
+                }
+                if (this.lifeRatio > PARTICLE_SHRINK_START_LIFE_RATIO) {
+                    const shrinkProgress = (this.lifeRatio - PARTICLE_SHRINK_START_LIFE_RATIO) / (1 - PARTICLE_SHRINK_START_LIFE_RATIO);
+                    this.size = this.initialSize * Math.max(0, (1 - shrinkProgress)) * PARTICLE_SHRINK_RATE;
+                }
+                const baseAlpha = 0.9; const smokeAlphaFactor = lerp(1, 0.7, this.smokeFactor);
+                this.alpha = Math.max(0, (1 - this.lifeRatio) * baseAlpha * smokeAlphaFactor);
+            }
+            draw(ctx) {
+                if (this.lifespan <= 0 || this.size < 0.5) return;
+                const r = Math.round(lerp(this.baseColor.r, smokeColor.r, this.smokeFactor));
+                const g = Math.round(lerp(this.baseColor.g, smokeColor.g, this.smokeFactor));
+                const b = Math.round(lerp(this.baseColor.b, smokeColor.b, this.smokeFactor));
+                ctx.fillStyle = `rgba(${r},${g},${b},${this.alpha})`;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+        class Spark {
+             constructor(x, y) {
+                this.x = x; this.y = y; const angle = Math.random() * Math.PI * 2;
+                const speed = getRandom(SPARK_INITIAL_SPEED_MIN, SPARK_INITIAL_SPEED_MAX);
+                this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+                this.lifespan = SPARK_LIFESPAN * getRandom(0.8, 1.2); this.initialLifespan = this.lifespan;
+                this.length = SPARK_LENGTH * getRandom(0.7, 1.3);
+            }
+            update() {
+                this.vx *= SPARK_DAMPING; this.vy *= SPARK_DAMPING;
+                this.x += this.vx; this.y += this.vy; this.lifespan--;
+                this.alpha = Math.max(0, (this.lifespan / this.initialLifespan));
+            }
+            draw(ctx) {
+                if (this.lifespan <= 0) return;
+                const tailLengthFactor = 0.1; const tailX = this.x - this.vx * tailLengthFactor * this.length;
+                const tailY = this.y - this.vy * tailLengthFactor * this.length;
+                const grad = ctx.createLinearGradient(this.x, this.y, tailX, tailY);
+                const headColor = `rgba(${sparkColor.r}, ${sparkColor.g}, ${sparkColor.b}, ${this.alpha})`;
+                const tailColor = `rgba(${sparkColor.r}, ${sparkColor.g}, ${sparkColor.b}, 0)`;
+                grad.addColorStop(0, headColor); grad.addColorStop(1, tailColor);
+                ctx.strokeStyle = grad; ctx.lineWidth = lerp(0.5, 2, this.alpha);
+                ctx.beginPath(); ctx.moveTo(this.x, this.y); ctx.lineTo(tailX, tailY); ctx.stroke();
+            }
+        }
+        class Shockwave {
+            constructor(x, y) {
+                this.x = x; this.y = y; this.radius = 0; this.alpha = 0.8;
+                this.lineWidth = SHOCKWAVE_INITIAL_WIDTH;
+            }
+            update() {
+                this.radius += SHOCKWAVE_SPEED; this.alpha -= SHOCKWAVE_FADE_RATE;
+                this.lineWidth = Math.max(1, SHOCKWAVE_INITIAL_WIDTH * this.alpha);
+                return this.alpha > 0 && this.radius <= SHOCKWAVE_MAX_RADIUS;
+            }
+            draw(ctx) {
+                 if (this.alpha <= 0) return;
+                 ctx.strokeStyle = `rgba(${SHOCKWAVE_COLOR.r}, ${SHOCKWAVE_COLOR.g}, ${SHOCKWAVE_COLOR.b}, ${this.alpha * 0.7})`;
+                 ctx.lineWidth = this.lineWidth; ctx.beginPath();
+                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.stroke();
+            }
+        }
+
+        // --- Spawners --- (remain the same)
+        function spawnParticles(x, y, radius) {
+            console.log(`Spawning ${PARTICLE_COUNT} particles around (${x},${y}) within radius ${radius}`);
+            for (let i = 0; i < PARTICLE_COUNT; i++) { particles.push(new Particle(x, y, radius)); }
+        }
+        function spawnSparks(x, y) {
+            for (let i = 0; i < SPARK_COUNT; i++) { sparks.push(new Spark(x, y)); }
+        }
+        function spawnShockwave(x, y) {
+            if (SHOCKWAVE_ENABLED) { shockwaves.push(new Shockwave(x,y)); }
+        }
+
+        // --- Effects --- (remain the same)
+        function triggerScreenShake(intensity, duration) {
+            currentShake.intensity = intensity; currentShake.duration = duration; currentShake.maxDuration = duration;
+        }
+        function updateScreenShake() {
+            if (currentShake.duration > 0) {
+                currentShake.duration--;
+                const amplitude = currentShake.intensity * (currentShake.duration / currentShake.maxDuration);
+                currentShake.x = getRandom(-amplitude, amplitude); currentShake.y = getRandom(-amplitude, amplitude);
+            } else { currentShake.x = 0; currentShake.y = 0; }
+        }
+        function triggerGlow(blur, brightness) {
+            if (GLOW_ENABLED) { currentGlow.blur = blur; currentGlow.brightness = brightness; }
+        }
+        function updateGlow() {
+            if (currentGlow.blur > 0) { currentGlow.blur -= GLOW_FADE_RATE * 50; currentGlow.blur = Math.max(0, currentGlow.blur); }
+            if (currentGlow.brightness > 1) { currentGlow.brightness -= GLOW_FADE_RATE; currentGlow.brightness = Math.max(1, currentGlow.brightness); }
+        }
+
+
+        // --- Main Animation Loop --- (remains the same logic)
+        function animationLoop(timestamp) {
+            const stillActive = coreLayers.length > 0 || particles.length > 0 || sparks.length > 0 || shockwaves.length > 0 || currentGlow.blur > 0.1 || currentGlow.brightness > 1.01 || currentShake.duration > 0;
+            if (!stillActive) {
+                console.log("Explosion finished."); canvas.style.filter = 'none'; animationFrameId = null; return;
+            }
+            animationFrameId = requestAnimationFrame(animationLoop);
+            const now = performance.now(); lastTimestamp = now;
+            updateScreenShake(); updateGlow();
+            ctx.save();
+            ctx.fillStyle = 'rgba(17, 17, 17, 0.3)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.translate(currentShake.x, currentShake.y);
+            // Update Elements (pass 'now' to core layers for age calculation)
+            coreLayers = coreLayers.filter(layer => layer.update(now));
+            particles.forEach(p => p.update()); sparks.forEach(s => s.update()); shockwaves = shockwaves.filter(sw => sw.update());
+            // Filter Dead Elements
+            particles = particles.filter(p => p.lifespan > 0 && p.size > 0.5); sparks = sparks.filter(s => s.lifespan > 0);
+            // Draw Elements
+            shockwaves.forEach(sw => sw.draw(ctx)); particles.forEach(p => p.draw(ctx));
+            coreLayers.forEach(layer => layer.draw(ctx)); // Core layer draw method now handles time-based color
+            sparks.forEach(s => s.draw(ctx));
+            ctx.restore();
+            // Apply Glow
+            if (GLOW_ENABLED && (currentGlow.blur > 0.1 || currentGlow.brightness > 1.01)) {
+                 canvas.style.filter = `blur(${currentGlow.blur}px) brightness(${currentGlow.brightness})`;
+            } else { canvas.style.filter = 'none'; }
+            // Active phase check (unchanged)
+             if (isActive && coreLayers.length === 0) { isActive = false; }
+        }
+
+        // --- Trigger Function --- (remains the same logic)
+        function triggerExplosion(x, y) {
+            console.log("Triggering explosion at", x, y); explosionX = x; explosionY = y;
+            // Reset state
+            coreLayers = []; particles = []; sparks = []; shockwaves = [];
+            currentShake = { x: 0, y: 0, duration: 0, intensity: 0, maxDuration: 0 };
+            currentGlow = { blur: 0, brightness: 1 }; isActive = true; lastTimestamp = performance.now();
+            // Create core layers
+            for (let i = 0; i < CORE_LAYERS; i++) { coreLayers.push(new CoreLayer(explosionX, explosionY, i, i * CORE_LAYER_DELAY)); }
+            // Spawn initial elements
+            spawnSparks(explosionX, explosionY); spawnShockwave(explosionX, explosionY);
+            // Schedule particle burst
+            setTimeout(() => { if (isActive) { spawnParticles(explosionX, explosionY, PARTICLE_SPAWN_INITIAL_RADIUS); } }, PARTICLE_SPAWN_DELAY);
+            // Trigger initial effects
+            triggerScreenShake(SCREEN_SHAKE_INTENSITY, SCREEN_SHAKE_DURATION); triggerGlow(GLOW_INITIAL_BLUR, GLOW_INITIAL_BRIGHTNESS);
+            // Start animation loop
+            if (!animationFrameId) {
+                console.log("Starting animation loop."); lastTimestamp = performance.now();
+                animationFrameId = requestAnimationFrame(animationLoop);
+            } else { console.log("Animation loop already running."); }
+        }
+
+        // --- Event Listeners --- (remain the same)
+        triggerButton.addEventListener('click', () => { triggerExplosion(canvas.width / 2, canvas.height / 2); });
+        canvas.addEventListener('click', (event) => {
+             const rect = canvas.getBoundingClientRect(); const clickX = event.clientX - rect.left; const clickY = event.clientY - rect.top;
+             triggerExplosion(clickX, clickY);
+         });
+
+         // Optional: Trigger one automatically on load for demo
+         // setTimeout(() => { triggerExplosion(canvas.width / 2, canvas.height / 2); }, 500);
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Pixel Explosion</title>
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #222; /* Dark background */
+            overflow: hidden;
+        }
+        canvas {
+            border: 1px solid #444; /* Optional: visualize canvas boundaries */
+            /* Ensure crisp rendering */
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+        p {
+            position: absolute;
+            bottom: 10px;
+            font-family: sans-serif;
+            color: #aaa;
+            text-align: center;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="explosionCanvas" width="300" height="300"></canvas>
+    <p>Canvas Pixel Explosion</p>
+
+    <script>
+        const canvas = document.getElementById('explosionCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- Configuration ---
+        const pixelSize = 15; // How large each 'pixel' from the data will be drawn
+        const totalAnimationTime = 800; // ms
+
+        // --- Color Palette --- (Indices match array values below, 0 = transparent)
+        const palette = [
+            null,         // 0: Transparent (represented by null or omitting the draw call)
+            '#fefeff',    // 1: White
+            '#fefc98',    // 2: Light Yellow
+            '#fad924',    // 3: Yellow
+            '#ef9e23',    // 4: Orange
+            '#b7431a',    // 5: Red
+            '#7a2b1b',    // 6: Dark Red
+            '#442434',    // 7: Dark Brown/Purple
+            '#140d13'     // 8: Near Black
+        ];
+
+        // --- Frame Data (Approximation of the sprite sheet) ---
+        // Each inner array is a row, each number is a palette index
+        // 0 represents empty space
+        const frames = [
+            // Frame 1 (Initial burst) - Approx 7x7
+            [
+                [0, 0, 4, 3, 4, 0, 0],
+                [0, 4, 3, 2, 3, 4, 0],
+                [4, 3, 2, 1, 2, 3, 4],
+                [3, 2, 1, 1, 1, 2, 3],
+                [4, 3, 2, 1, 2, 3, 4],
+                [0, 4, 3, 2, 3, 4, 0],
+                [0, 0, 4, 3, 4, 0, 0]
+            ],
+            // Frame 2 (Expanding) - Approx 9x9
+            [
+                [0, 0, 0, 4, 3, 4, 0, 0, 0],
+                [0, 0, 4, 3, 2, 3, 4, 0, 0],
+                [0, 4, 3, 2, 1, 2, 3, 4, 0],
+                [4, 3, 2, 1, 1, 1, 2, 3, 4],
+                [3, 2, 1, 1, 1, 1, 1, 2, 3],
+                [4, 3, 2, 1, 1, 1, 2, 3, 4],
+                [0, 4, 3, 2, 1, 2, 3, 4, 0],
+                [0, 0, 4, 3, 2, 3, 4, 0, 0],
+                [0, 0, 0, 4, 3, 4, 0, 0, 0]
+            ],
+            // Frame 3 (Peak Size) - Approx 11x11
+            [
+                [0, 0, 0, 5, 4, 3, 4, 5, 0, 0, 0],
+                [0, 0, 5, 4, 3, 2, 3, 4, 5, 0, 0],
+                [0, 5, 4, 3, 2, 1, 2, 3, 4, 5, 0],
+                [5, 4, 3, 2, 1, 1, 1, 2, 3, 4, 5],
+                [4, 3, 2, 1, 1, 1, 1, 1, 2, 3, 4],
+                [3, 2, 1, 1, 1, 1, 1, 1, 1, 2, 3],
+                [4, 3, 2, 1, 1, 1, 1, 1, 2, 3, 4],
+                [5, 4, 3, 2, 1, 1, 1, 2, 3, 4, 5],
+                [0, 5, 4, 3, 2, 1, 2, 3, 4, 5, 0],
+                [0, 0, 5, 4, 3, 2, 3, 4, 5, 0, 0],
+                [0, 0, 0, 5, 4, 3, 4, 5, 0, 0, 0]
+            ],
+             // Frame 4 (Cooling, Darkening) - Approx 11x11
+            [
+                [0, 0, 0, 8, 7, 6, 7, 8, 0, 0, 0],
+                [0, 0, 8, 7, 6, 5, 6, 7, 8, 0, 0],
+                [0, 8, 7, 6, 5, 5, 5, 6, 7, 8, 0],
+                [8, 7, 6, 5, 5, 6, 5, 5, 6, 7, 8],
+                [7, 6, 5, 5, 6, 7, 6, 5, 5, 6, 7],
+                [6, 5, 5, 6, 7, 8, 7, 6, 5, 5, 6],
+                [7, 6, 5, 5, 6, 7, 6, 5, 5, 6, 7],
+                [8, 7, 6, 5, 5, 6, 5, 5, 6, 7, 8],
+                [0, 8, 7, 6, 5, 5, 5, 6, 7, 8, 0],
+                [0, 0, 8, 7, 6, 5, 6, 7, 8, 0, 0],
+                [0, 0, 0, 8, 7, 6, 7, 8, 0, 0, 0]
+            ],
+             // Frame 5 (Dissipating) - Approx 11x11 (more sparse)
+            [
+                [0, 0, 0, 0, 8, 0, 8, 0, 0, 0, 0],
+                [0, 0, 8, 0, 7, 6, 7, 0, 8, 0, 0],
+                [0, 8, 7, 0, 6, 0, 6, 0, 7, 8, 0],
+                [8, 0, 6, 5, 0, 7, 0, 5, 6, 0, 8],
+                [7, 6, 0, 6, 7, 0, 7, 6, 0, 6, 7],
+                [0, 0, 5, 7, 0, 8, 0, 7, 5, 0, 0],
+                [7, 6, 0, 6, 7, 0, 7, 6, 0, 6, 7],
+                [8, 0, 6, 5, 0, 7, 0, 5, 6, 0, 8],
+                [0, 8, 7, 0, 6, 0, 6, 0, 7, 8, 0],
+                [0, 0, 8, 0, 7, 6, 7, 0, 8, 0, 0],
+                [0, 0, 0, 0, 8, 0, 8, 0, 0, 0, 0]
+            ],
+             // Frame 6 (Fragments) - Approx 11x11 (very sparse)
+            [
+                [0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0],
+                [0, 0, 0, 8, 0, 7, 0, 8, 0, 0, 0],
+                [0, 0, 7, 0, 0, 0, 0, 0, 7, 0, 0],
+                [0, 8, 0, 6, 0, 0, 0, 6, 0, 8, 0],
+                [0, 0, 0, 7, 0, 8, 0, 7, 0, 0, 0],
+                [8, 7, 0, 0, 8, 0, 8, 0, 0, 7, 8],
+                [0, 0, 0, 7, 0, 8, 0, 7, 0, 0, 0],
+                [0, 8, 0, 6, 0, 0, 0, 6, 0, 8, 0],
+                [0, 0, 7, 0, 0, 0, 0, 0, 7, 0, 0],
+                [0, 0, 0, 8, 0, 7, 0, 8, 0, 0, 0],
+                [0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0]
+            ]
+        ];
+
+        // --- Animation State ---
+        let currentFrameIndex = 0;
+        const frameDuration = totalAnimationTime / frames.length;
+        let lastFrameTime = 0;
+        let accumulatedTime = 0;
+
+        // --- Drawing Function ---
+        function drawFrame(frameIndex) {
+            const frameData = frames[frameIndex];
+            if (!frameData) return; // Safety check
+
+            const frameRows = frameData.length;
+            const frameCols = frameData[0].length; // Assume rectangular
+
+            // Calculate dimensions of the pixel data block
+            const framePixelWidth = frameCols * pixelSize;
+            const framePixelHeight = frameRows * pixelSize;
+
+            // Calculate top-left corner to center the frame
+            const startX = (canvas.width - framePixelWidth) / 2;
+            const startY = (canvas.height - framePixelHeight) / 2;
+
+            // Disable smoothing for crisp pixels
+            ctx.imageSmoothingEnabled = false;
+
+            // Clear the canvas area where the explosion will be drawn (optional: clear whole canvas)
+            // ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear whole canvas
+             ctx.clearRect(startX - pixelSize, startY - pixelSize, framePixelWidth + 2 * pixelSize, framePixelHeight + 2 * pixelSize); // Clear bounding box
+
+
+            // Iterate over the frame data and draw pixels
+            for (let r = 0; r < frameRows; r++) {
+                for (let c = 0; c < frameCols; c++) {
+                    const colorIndex = frameData[r][c];
+                    if (colorIndex && colorIndex > 0 && colorIndex < palette.length) { // Check if index is valid and not 0
+                        ctx.fillStyle = palette[colorIndex];
+                        const drawX = startX + c * pixelSize;
+                        const drawY = startY + r * pixelSize;
+                        ctx.fillRect(drawX, drawY, pixelSize, pixelSize);
+                    }
+                }
+            }
+        }
+
+        // --- Animation Loop ---
+        function animationLoop(timestamp) {
+            const deltaTime = timestamp - lastFrameTime;
+            lastFrameTime = timestamp;
+            accumulatedTime += deltaTime;
+
+            // Check if it's time to advance to the next frame
+            if (accumulatedTime >= frameDuration) {
+                currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+                accumulatedTime -= frameDuration; // Subtract duration, don't reset to 0
+
+                // Draw the new frame
+                 drawFrame(currentFrameIndex);
+            }
+
+
+            // Request the next frame
+            requestAnimationFrame(animationLoop);
+        }
+
+        // --- Start ---
+        // Initial draw of the first frame
+        drawFrame(currentFrameIndex);
+        // Start the animation loop
+        requestAnimationFrame(animationLoop);
+
+    </script>
+
+</body>
+</html>

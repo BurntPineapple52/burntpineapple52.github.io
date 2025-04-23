@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Pixel Explosion 2</title>
+<style>
+  body { display: grid; place-items: center; min-height: 100vh; background: #111; }
+
+  .explosion-container-2 {
+    position: relative;
+    width: 50px; /* Start smaller, explosion makes it bigger */
+    height: 50px;
+  }
+
+  .pixel-2 {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background: cyan;
+    top: calc(50% - 7.5px);
+    left: calc(50% - 7.5px);
+    border-radius: 0;
+    opacity: 0;
+    animation: explode-2 1s cubic-bezier(0.17, 0.89, 0.32, 1.49) forwards; /* Added overshoot easing */
+  }
+
+  @keyframes explode-2 {
+    0% {
+      opacity: 1;
+      transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+    100% {
+      opacity: 0;
+      /* Random-ish translate & rotation */
+      transform: translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.2);
+    }
+  }
+
+  /* --- Define random-ish position, rotation and delay --- */
+  .pixel-2:nth-child(1) { --tx: -60px; --ty: -80px; --rot: 90deg; animation-delay: 0s; background: #0ff;}
+  .pixel-2:nth-child(2) { --tx: 30px;  --ty: -70px; --rot: -45deg; animation-delay: 0.05s; background: #0cc;}
+  .pixel-2:nth-child(3) { --tx: 80px;  --ty: -30px; --rot: 180deg; animation-delay: 0.02s; background: #0aa;}
+  .pixel-2:nth-child(4) { --tx: -70px; --ty: 10px;  --rot: -120deg; animation-delay: 0.1s; background: #3ff;}
+  .pixel-2:nth-child(5) { --tx: 0px;   --ty: 50px;  --rot: 30deg; animation-delay: 0s; background: #6ff;} /* Center pixel */
+  .pixel-2:nth-child(6) { --tx: 75px;  --ty: 40px;  --rot: 60deg; animation-delay: 0.08s; background: #0cc;}
+  .pixel-2:nth-child(7) { --tx: -50px; --ty: 90px;  --rot: -180deg; animation-delay: 0.03s; background: #0aa;}
+  .pixel-2:nth-child(8) { --tx: 10px;  --ty: 100px; --rot: 150deg; animation-delay: 0.06s; background: #3ff;}
+  .pixel-2:nth-child(9) { --tx: 60px;  --ty: 110px; --rot: -90deg; animation-delay: 0.12s; background: #0ff;}
+
+</style>
+</head>
+<body>
+
+<div class="explosion-container-2">
+  <div class="pixel-2"></div>
+  <div class="pixel-2"></div>
+  <div class="pixel-2"></div>
+  <div class="pixel-2"></div>
+  <div class="pixel-2"></div>
+  <div class="pixel-2"></div>
+  <div class="pixel-2"></div>
+  <div class="pixel-2"></div>
+  <div class="pixel-2"></div>
+</div>
+
+</body>
+</html>

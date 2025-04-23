@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procedural Canvas Explosion</title>
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #1a1a1a;
+            overflow: hidden;
+            color: #aaa;
+        }
+        canvas {
+            border: 1px solid #333;
+            background-color: transparent; /* Ensure canvas itself isn't opaque */
+             /* Glow handled by JS now for finer control potentially */
+            /* transition: filter 0.1s ease-out; */
+        }
+        p {
+            position: absolute;
+            bottom: 10px;
+            font-family: sans-serif;
+            text-align: center;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="explosionCanvas" width="500" height="500"></canvas>
+    <p>Procedural Canvas Explosion (No Pixel Arrays)</p>
+    <button id="triggerButton" style="position: absolute; top: 10px; left: 10px;">Trigger Explosion</button>
+
+    <script>
+        const canvas = document.getElementById('explosionCanvas');
+        const ctx = canvas.getContext('2d');
+        const triggerButton = document.getElementById('triggerButton');
+
+        // --- Configuration ---
+        const CORE_LAYERS = 4;          // Number of gradient layers for the core
+        const CORE_MAX_RADIUS = 80;     // Max size of the core fireball
+        const CORE_GROWTH_RATE = 1.08;  // How fast radius expands (multiplicative)
+        const CORE_FADE_RATE = 0.015;   // How fast core alpha decreases
+        const CORE_LAYER_DELAY = 30;    // ms delay between starting each core layer
+
+        const PARTICLE_COUNT = 100;      // Number of debris particles
+        const PARTICLE_SPAWN_RADIUS_FACTOR = 0.6; // Spawn particles when core reaches this fraction of max radius
+        const PARTICLE_LIFESPAN_MIN = 80; // Frames
+        const PARTICLE_LIFESPAN_MAX = 140;
+        const PARTICLE_SPEED_MIN = 1.5;
+        const PARTICLE_SPEED_MAX = 4.5;
+        const PARTICLE_SIZE_MIN = 2;
+        const PARTICLE_SIZE_MAX = 6;
+        const PARTICLE_GRAVITY = 0.03;
+        const PARTICLE_SHRINK_RATE = 0.985; // Multiplier each frame
+
+        const SPARK_COUNT = 30;
+        const SPARK_LIFESPAN = 40;
+        const SPARK_SPEED_MIN = 5;
+        const SPARK_SPEED_MAX = 9;
+        const SPARK_LENGTH = 15;
+
+        const SCREEN_SHAKE_INTENSITY = 5;
+        const SCREEN_SHAKE_DURATION = 10; // Frames
+
+        // --- Colors --- (Used dynamically)
+        const coreColors = [ // Inner to Outer
+            { r: 255, g: 255, b: 255 }, // White
+            { r: 255, g: 255, b: 150 }, // Light Yellow
+            { r: 255, g: 180, b: 0 },   // Orange
+            { r: 200, g: 80, b: 0 }    // Red
+        ];
+        const particleColors = [
+            { r: 255, g: 180, b: 0 },   // Orange
+            { r: 200, g: 80, b: 0 },    // Red
+            { r: 100, g: 40, b: 10 },   // Dark Red
+            { r: 50,  g: 50, b: 50 }    // Dark Grey (Smoke)
+        ];
+        const sparkColor = { r: 255, g: 255, b: 220 }; // Off-white/Yellow
+
+        // --- Global State ---
+        let coreLayers = [];
+        let particles = [];
+        let sparks = [];
+        let explosionX = canvas.width / 2;
+        let explosionY = canvas.height / 2;
+        let currentShake = { x: 0, y: 0, duration: 0 };
+        let lastTimestamp = 0;
+        let isActive = false; // Is an explosion currently happening?
+
+        // --- Classes ---
+        class CoreLayer {
+            constructor(x, y, index, startDelay) {
+                this.x = x;
+                this.y = y;
+                this.index = index; // 0 is innermost
+                this.radius = 0.1;
+                this.alpha = 1.0;
+                this.colorInner = coreColors[index] || coreColors[coreColors.length - 1];
+                this.colorOuter = coreColors[index + 1] || coreColors[index]; // Fade to next color or self
+                this.startTime = Date.now() + startDelay;
+                this.spawnedParticles = false;
+            }
+
+            update() {
+                if (Date.now() < this.startTime) return false; // Not started yet
+
+                this.radius *= CORE_GROWTH_RATE;
+                this.alpha -= CORE_FADE_RATE * (1 + this.index * 0.5); // Outer layers fade faster
+
+                if (this.alpha <= 0) return false; // Layer is dead
+
+                // Spawn particles from outer layers as they expand
+                if (!this.spawnedParticles && this.index >= 1 && this.radius > CORE_MAX_RADIUS * PARTICLE_SPAWN_RADIUS_FACTOR) {
+                    spawnParticles(this.x, this.y, this.radius);
+                    this.spawnedParticles = true; // Spawn only once per layer
+                }
+                return true; // Layer is alive
+            }
+
+            draw(ctx) {
+                if (Date.now() < this.startTime || this.alpha <= 0 || this.radius < 1) return;
+
+                const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, Math.min(this.radius, CORE_MAX_RADIUS));
+                const innerColor = `rgba(${this.colorInner.r}, ${this.colorInner.g}, ${this.colorInner.b}, ${this.alpha * 0.9})`; // Slightly less alpha inner
+                const outerColor = `rgba(${this.colorOuter.r}, ${this.colorOuter.g}, ${this.colorOuter.b}, 0)`; // Fade to transparent
+
+                grad.addColorStop(0, innerColor);
+                grad.addColorStop(0.5 + this.index * 0.1, innerColor); // Hold inner color longer for inner layers
+                grad.addColorStop(1, outerColor);
+
+                ctx.fillStyle = grad;
+                // Use 'lighter' for additive blending on inner layers
+                ctx.globalCompositeOperation = (this.index < 2) ? 'lighter' : 'source-over';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, Math.min(this.radius, CORE_MAX_RADIUS), 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalCompositeOperation = 'source-over'; // Reset composite mode
+            }
+        }
+
+        class Particle {
+            constructor(x, y, originRadius) {
+                const angle = Math.random() * Math.PI * 2;
+                const spawnDist = Math.random() * originRadius;
+                this.x = x + Math.cos(angle) * spawnDist;
+                this.y = y + Math.sin(angle) * spawnDist;
+                this.size = getRandom(PARTICLE_SIZE_MIN, PARTICLE_SIZE_MAX);
+                this.baseColor = particleColors[Math.floor(Math.random() * particleColors.length)];
+                this.alpha = 0.8 + Math.random() * 0.2;
+
+                const speed = getRandom(PARTICLE_SPEED_MIN, PARTICLE_SPEED_MAX);
+                this.vx = Math.cos(angle) * speed * getRandom(0.7, 1.3); // Add variation
+                this.vy = Math.sin(angle) * speed * getRandom(0.7, 1.3);
+                this.lifespan = getRandom(PARTICLE_LIFESPAN_MIN, PARTICLE_LIFESPAN_MAX);
+                this.initialLifespan = this.lifespan;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += PARTICLE_GRAVITY;
+                this.lifespan--;
+                this.size *= PARTICLE_SHRINK_RATE;
+                this.rotation += this.rotationSpeed;
+                this.alpha = Math.max(0, (this.lifespan / this.initialLifespan) * 0.9); // Fade out
+            }
+
+            draw(ctx) {
+                if (this.lifespan <= 0 || this.size < 1) return;
+
+                // Interpolate color towards grey/smoke as it fades
+                const lifeRatio = 1 - (this.lifespan / this.initialLifespan); // 0 = new, 1 = dead
+                const smokeColor = particleColors[particleColors.length - 1];
+                const r = Math.round(lerp(this.baseColor.r, smokeColor.r, lifeRatio * 1.5)); // Fade faster to smoke
+                const g = Math.round(lerp(this.baseColor.g, smokeColor.g, lifeRatio * 1.5));
+                const b = Math.round(lerp(this.baseColor.b, smokeColor.b, lifeRatio * 1.5));
+
+                ctx.fillStyle = `rgba(${r},${g},${b},${this.alpha})`;
+
+                ctx.save();
+                ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+                ctx.rotate(this.rotation);
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                ctx.restore();
+            }
+        }
+
+         class Spark {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = getRandom(SPARK_SPEED_MIN, SPARK_SPEED_MAX);
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.lifespan = SPARK_LIFESPAN * getRandom(0.8, 1.2);
+                this.initialLifespan = this.lifespan;
+                this.length = SPARK_LENGTH * getRandom(0.7, 1.3);
+                this.color = `rgb(${sparkColor.r}, ${sparkColor.g}, ${sparkColor.b})`;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.lifespan--;
+                // Fade based on life
+                 this.alpha = Math.max(0, (this.lifespan / this.initialLifespan));
+            }
+
+            draw(ctx) {
+                if (this.lifespan <= 0) return;
+
+                const tailX = this.x - this.vx * (this.length / 50); // Tail position
+                const tailY = this.y - this.vy * (this.length / 50);
+
+                const grad = ctx.createLinearGradient(this.x, this.y, tailX, tailY);
+                grad.addColorStop(0, `rgba(${sparkColor.r}, ${sparkColor.g}, ${sparkColor.b}, ${this.alpha})`); // Head bright
+                grad.addColorStop(1, `rgba(${sparkColor.r}, ${sparkColor.g}, ${sparkColor.b}, 0)`);       // Tail fade
+
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(tailX, tailY);
+                ctx.stroke();
+            }
+        }
+
+        // --- Helper Functions ---
+        function getRandom(min, max) { return Math.random() * (max - min) + min; }
+        function lerp(a, b, t) { return a + (b - a) * t; }
+
+        // --- Spawners ---
+        function spawnParticles(x, y, radius) {
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle(x, y, radius));
+            }
+        }
+         function spawnSparks(x, y) {
+            for (let i = 0; i < SPARK_COUNT; i++) {
+                sparks.push(new Spark(x, y));
+            }
+        }
+
+        // --- Effects ---
+        function triggerScreenShake(intensity, duration) {
+            currentShake.intensity = intensity;
+            currentShake.duration = duration;
+        }
+        function updateScreenShake() {
+            if (currentShake.duration > 0) {
+                currentShake.duration--;
+                const amplitude = currentShake.intensity * (currentShake.duration / SCREEN_SHAKE_DURATION);
+                currentShake.x = getRandom(-amplitude, amplitude);
+                currentShake.y = getRandom(-amplitude, amplitude);
+            } else {
+                currentShake.x = 0;
+                currentShake.y = 0;
+            }
+        }
+
+        // --- Main Animation Loop ---
+        function animationLoop(timestamp) {
+            if (!isActive) return; // Stop loop if explosion finished
+
+            const deltaTime = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+            // Limit delta to prevent large jumps if tabbed away
+            const dt = Math.min(deltaTime, 30) / 16.67; // Normalize to ~60fps update rate
+
+             // Update Effects
+            updateScreenShake();
+
+            // Update Core Layers
+            coreLayers = coreLayers.filter(layer => layer.update(dt));
+
+            // Update Particles & Sparks
+            particles.forEach(p => p.update(dt));
+            sparks.forEach(s => s.update(dt));
+            particles = particles.filter(p => p.lifespan > 0 && p.size > 0.5);
+            sparks = sparks.filter(s => s.lifespan > 0);
+
+            // --- Drawing ---
+            ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+            ctx.translate(currentShake.x, currentShake.y);    // Apply screen shake
+
+            // Draw Core Layers
+            coreLayers.forEach(layer => layer.draw(ctx));
+
+            // Draw Particles & Sparks
+            particles.forEach(p => p.draw(ctx));
+            sparks.forEach(s => s.draw(ctx));
+
+            ctx.restore();
+
+            // Check if explosion is finished
+            if (coreLayers.length === 0 && particles.length === 0 && sparks.length === 0) {
+                isActive = false;
+                console.log("Explosion finished.");
+            } else {
+                 requestAnimationFrame(animationLoop); // Continue loop
+            }
+        }
+
+        // --- Trigger Function ---
+        function triggerExplosion(x, y) {
+            if (isActive) return; // Don't allow multiple simultaneous explosions easily
+
+            console.log("Triggering explosion at", x, y);
+            explosionX = x;
+            explosionY = y;
+
+            // Reset state
+            coreLayers = [];
+            particles = [];
+            sparks = [];
+            currentShake = { x: 0, y: 0, duration: 0 };
+            isActive = true;
+            lastTimestamp = performance.now(); // Use performance.now() for higher precision
+
+            // Create core layers with stagger
+            for (let i = 0; i < CORE_LAYERS; i++) {
+                coreLayers.push(new CoreLayer(explosionX, explosionY, i, i * CORE_LAYER_DELAY));
+            }
+
+            // Spawn initial sparks
+            spawnSparks(explosionX, explosionY);
+
+             // Trigger initial shake
+            triggerScreenShake(SCREEN_SHAKE_INTENSITY, SCREEN_SHAKE_DURATION);
+
+            // Start the animation loop
+            requestAnimationFrame(animationLoop);
+        }
+
+        // --- Event Listener ---
+        triggerButton.addEventListener('click', () => {
+            triggerExplosion(canvas.width / 2, canvas.height / 2);
+        });
+         canvas.addEventListener('click', (event) => {
+             const rect = canvas.getBoundingClientRect();
+             const clickX = event.clientX - rect.left;
+             const clickY = event.clientY - rect.top;
+             triggerExplosion(clickX, clickY);
+         });
+
+         // Initial trigger for demo
+         // triggerExplosion(canvas.width / 2, canvas.height / 2);
+
+    </script>
+
+</body>
+</html>

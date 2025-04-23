@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Pixel Explosion Sprite</title>
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            background-color: #ddd; /* Light gray background to see it clearly */
+            margin: 0;
+        }
+
+        :root {
+            /* Define colors based on the sprite */
+            --pixel-white: #fefeff; /* Off-white */
+            --pixel-lyellow: #fefc98; /* Light Yellow */
+            --pixel-yellow: #fad924; /* Yellow */
+            --pixel-orange: #ef9e23; /* Orange */
+            --pixel-red: #b7431a;   /* Red */
+            --pixel-dred: #7a2b1b;   /* Dark Red */
+            --pixel-brown: #442434;  /* Dark Brown/Purple */
+            --pixel-black: #140d13;  /* Near Black */
+
+            /* Define the size of one 'pixel' */
+            --pixel-size: 8px;
+        }
+
+        .pixel-explosion {
+            position: relative;
+            width: var(--pixel-size); /* Base element is one pixel */
+            height: var(--pixel-size);
+            background: var(--pixel-yellow); /* Start with center color */
+            /* Ensure crisp edges - crucial for pixel art */
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            /* Set a total animation duration */
+            animation: explode-sprite 0.8s infinite steps(1); /* steps(1) makes it jump between frames */
+            /* Start transparent before animation begins */
+            opacity: 0;
+        }
+
+        /* Helper for pixel positioning */
+        /* box-shadow: X Y Blur Spread Color */
+        /* We use 0 blur and 0 spread */
+        /* calc(var(--pixel-size) * X_OFFSET) calc(var(--pixel-size) * Y_OFFSET) 0 0 COLOR */
+
+        @keyframes explode-sprite {
+            /* Frame 0 (Start - small flash, mimicking frame 1) */
+            0%, 16% { /* Hold Frame 1 for ~1/6th of the time */
+                opacity: 1;
+                background: var(--pixel-lyellow);
+                box-shadow:
+                    /* Core */
+                    calc(var(--pixel-size) * 1) 0 0 0 var(--pixel-yellow),
+                    calc(var(--pixel-size) * -1) 0 0 0 var(--pixel-yellow),
+                    0 calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow),
+                    0 calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow),
+                    calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow),
+                    calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow),
+                    calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow),
+                    calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow),
+                    /* Outer Orange */
+                    calc(var(--pixel-size) * 2) 0 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * -2) 0 0 0 var(--pixel-orange),
+                    0 calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange),
+                    0 calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange),
+                     calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-orange);
+                transform: scale(1.5); /* Make initial frames slightly smaller overall */
+            }
+
+             /* Frame 2 */
+            17%, 33% {
+                opacity: 1;
+                background: var(--pixel-white);
+                 box-shadow: /* Simplified - Capturing essence */
+                    /* White/LYellow Core */
+                    calc(var(--pixel-size) * 1) 0 0 0 var(--pixel-lyellow),
+                    calc(var(--pixel-size) * -1) 0 0 0 var(--pixel-lyellow),
+                    0 calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow),
+                    0 calc(var(--pixel-size) * -1) 0 0 var(--pixel-lyellow),
+                    calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow),
+                    calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow),
+                    calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-lyellow),
+                    calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-white),
+                     /* Yellow Layer */
+                    calc(var(--pixel-size) * 2) 0 0 0 var(--pixel-yellow),
+                    calc(var(--pixel-size) * -2) 0 0 0 var(--pixel-yellow),
+                    0 calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow),
+                    0 calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow),
+                     calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow),
+                     calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow),
+                     calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow),
+                     calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow),
+                     calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow),
+                     calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow),
+                     calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow),
+                     calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow),
+                    /* Outer Orange */
+                    calc(var(--pixel-size) * 3) 0 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * -3) 0 0 0 var(--pixel-orange),
+                    0 calc(var(--pixel-size) * 3) 0 0 var(--pixel-orange),
+                    0 calc(var(--pixel-size) * -3) 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange),
+                    calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange),
+                     calc(var(--pixel-size) * 3) calc(var(--pixel-size) * 1) 0 0 var(--pixel-orange),
+                     calc(var(--pixel-size) * -3) calc(var(--pixel-size) * -1) 0 0 var(--pixel-orange),
+                     calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 3) 0 0 var(--pixel-orange),
+                     calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -3) 0 0 var(--pixel-orange);
+                transform: scale(1.8); /* Slightly larger */
+            }
+
+            /* Frame 3 - Peak size, more red */
+            34%, 50% {
+                 opacity: 1;
+                 background: var(--pixel-white);
+                 box-shadow: /* Simplified */
+                    /* White/LYellow Core */
+                     calc(var(--pixel-size) * 1) 0 0 0 var(--pixel-lyellow), calc(var(--pixel-size) * -1) 0 0 0 var(--pixel-lyellow), 0 calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow), 0 calc(var(--pixel-size) * -1) 0 0 var(--pixel-white),
+                     calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-white), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-lyellow),
+                     /* Yellow Layer */
+                     calc(var(--pixel-size) * 2) 0 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) 0 0 0 var(--pixel-yellow), 0 calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), 0 calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow),
+                     calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow),
+                     calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow),
+                     calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow),
+                    /* Outer Orange/Red Layer */
+                     calc(var(--pixel-size) * 3) 0 0 0 var(--pixel-orange), calc(var(--pixel-size) * -3) 0 0 0 var(--pixel-orange), 0 calc(var(--pixel-size) * 3) 0 0 var(--pixel-orange), 0 calc(var(--pixel-size) * -3) 0 0 var(--pixel-orange),
+                     calc(var(--pixel-size) * 3) calc(var(--pixel-size) * 1) 0 0 var(--pixel-red), calc(var(--pixel-size) * -3) calc(var(--pixel-size) * -1) 0 0 var(--pixel-red), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 3) 0 0 var(--pixel-red), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -3) 0 0 var(--pixel-red),
+                     calc(var(--pixel-size) * 3) calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 3) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -3) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -3) calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange),
+                     calc(var(--pixel-size) * 4) 0 0 0 var(--pixel-red), calc(var(--pixel-size) * -4) 0 0 0 var(--pixel-red), 0 calc(var(--pixel-size) * 4) 0 0 var(--pixel-red), 0 calc(var(--pixel-size) * -4) 0 0 var(--pixel-red);
+                transform: scale(2.2); /* Max size */
+            }
+
+            /* Frame 4 - Start cooling, dark reds */
+             51%, 67% {
+                 opacity: 1;
+                 background: var(--pixel-red);
+                 box-shadow: /* Simplified smoke/debris */
+                    /* Red Core */
+                     calc(var(--pixel-size) * 1) 0 0 0 var(--pixel-dred), calc(var(--pixel-size) * -1) 0 0 0 var(--pixel-red), 0 calc(var(--pixel-size) * 1) 0 0 var(--pixel-dred), 0 calc(var(--pixel-size) * -1) 0 0 var(--pixel-red),
+                     calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-dred), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-red), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-red), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-dred),
+                    /* Dark Red/Brown Layer */
+                    calc(var(--pixel-size) * 2) 0 0 0 var(--pixel-dred), calc(var(--pixel-size) * -2) 0 0 0 var(--pixel-dred), 0 calc(var(--pixel-size) * 2) 0 0 var(--pixel-dred), 0 calc(var(--pixel-size) * -2) 0 0 var(--pixel-dred),
+                    calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-brown), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-brown), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-brown), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-brown),
+                    calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-brown), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-brown), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-brown), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-brown),
+                    /* Scattered Black bits */
+                    calc(var(--pixel-size) * 3) calc(var(--pixel-size) * 0) 0 0 var(--pixel-black), calc(var(--pixel-size) * -3) calc(var(--pixel-size) * 1) 0 0 var(--pixel-black), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 3) 0 0 var(--pixel-black), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -3) 0 0 var(--pixel-black),
+                    calc(var(--pixel-size) * 3) calc(var(--pixel-size) * 3) 0 0 var(--pixel-black), calc(var(--pixel-size) * -3) calc(var(--pixel-size) * -2) 0 0 var(--pixel-black);
+                 transform: scale(2.0); /* Start shrinking */
+            }
+
+            /* Frame 5 - Further dissipation, darker */
+             68%, 84% {
+                opacity: 1;
+                background: var(--pixel-dred);
+                box-shadow: /* More broken up */
+                    calc(var(--pixel-size) * 1) 0 0 0 var(--pixel-brown),
+                    calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-dred),
+                    0 calc(var(--pixel-size) * -1) 0 0 var(--pixel-brown),
+                    calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-dred),
+                    calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-brown),
+                    calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-dred),
+                    calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-brown),
+                    calc(var(--pixel-size) * 3) calc(var(--pixel-size) * -1) 0 0 var(--pixel-black),
+                    calc(var(--pixel-size) * -3) calc(var(--pixel-size) * 2) 0 0 var(--pixel-black),
+                    calc(var(--pixel-size) * 0) calc(var(--pixel-size) * 3) 0 0 var(--pixel-black),
+                    calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 3) 0 0 var(--pixel-black),
+                    calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -3) 0 0 var(--pixel-black);
+                 transform: scale(1.8); /* Continue shrinking */
+            }
+
+            /* Frame 6 - Mostly gone, few fragments */
+            85%, 99% {
+                 opacity: 0.9; /* Start fading */
+                 background: transparent; /* Core fades */
+                 box-shadow: /* Just fragments */
+                    calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-brown),
+                    calc(var(--pixel-size) * -2) 0 0 0 var(--pixel-black),
+                    0 calc(var(--pixel-size) * -2) 0 0 var(--pixel-dred),
+                    calc(var(--pixel-size) * 3) calc(var(--pixel-size) * -1) 0 0 var(--pixel-black),
+                    calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 3) 0 0 var(--pixel-black),
+                    calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 0 var(--pixel-black),
+                    calc(var(--pixel-size) * -3) calc(var(--pixel-size) * -3) 0 0 var(--pixel-black);
+                transform: scale(1.6); /* Smallest visible state */
+            }
+
+            /* End frame - Invisible */
+            100% {
+                opacity: 0;
+                background: transparent;
+                box-shadow: none;
+                transform: scale(1.5);
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="pixel-explosion"></div>
+
+    <p style="position:absolute; bottom: 10px; font-family: sans-serif; color: #555; text-align: center; width: 100%;">
+        Pure CSS Pixel Explosion (Approximation)
+    </p>
+
+</body>
+</html>

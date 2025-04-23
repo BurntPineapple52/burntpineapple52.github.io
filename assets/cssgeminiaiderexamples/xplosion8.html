@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Canvas Pixel Explosion</title>
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #1a1a1a; /* Darker background */
+            overflow: hidden;
+            color: #aaa; /* For text */
+        }
+        canvas {
+            border: 1px solid #333; /* Optional: visualize canvas boundaries */
+            /* Ensure crisp rendering */
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            transition: filter 0.1s ease-out; /* Smooth transition for glow */
+        }
+        /* CSS class for the glow effect */
+        .glow {
+            filter: drop-shadow(0 0 10px #fff7) drop-shadow(0 0 20px #ffc6); /* White + Yellow/Orange Glow */
+        }
+        p {
+            position: absolute;
+            bottom: 10px;
+            font-family: sans-serif;
+            text-align: center;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="explosionCanvas" width="400" height="400"></canvas>
+    <p>Enhanced Canvas Pixel Explosion</p>
+
+    <script>
+        const canvas = document.getElementById('explosionCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- Configuration ---
+        const pixelSize = 12;         // Base size of drawn 'pixels'
+        const baseTotalAnimationTime = 1200; // Slightly longer base time (ms) for more effects
+        const particleSpawnFrameStart = 3; // Start spawning particles when this frame index begins
+        const particleSpawnChance = 0.6; // Chance for a colored pixel to become a particle
+        const sparkSpawnFrameStart = 0;
+        const sparkSpawnFrameEnd = 2;
+        const sparksPerFrame = 15;
+        const screenShakeFrames = [1, 2]; // Frames that trigger screen shake
+        const glowFrames = [0, 1, 2];    // Frames that have CSS glow
+
+        // --- Palette --- (0 = transparent)
+        const palette = [ null, '#fefeff', '#fefc98', '#fad924', '#ef9e23', '#b7431a', '#7a2b1b', '#442434', '#140d13' ];
+
+        // --- Frame Data (Same as before) ---
+        const frames = [ /* ... paste the frame data array from the previous example here ... */
+             // Frame 1 (Initial burst) - Approx 7x7
+            [ [0,0,4,3,4,0,0],[0,4,3,2,3,4,0],[4,3,2,1,2,3,4],[3,2,1,1,1,2,3],[4,3,2,1,2,3,4],[0,4,3,2,3,4,0],[0,0,4,3,4,0,0] ],
+            // Frame 2 (Expanding) - Approx 9x9
+            [ [0,0,0,4,3,4,0,0,0],[0,0,4,3,2,3,4,0,0],[0,4,3,2,1,2,3,4,0],[4,3,2,1,1,1,2,3,4],[3,2,1,1,1,1,1,2,3],[4,3,2,1,1,1,2,3,4],[0,4,3,2,1,2,3,4,0],[0,0,4,3,2,3,4,0,0],[0,0,0,4,3,4,0,0,0] ],
+            // Frame 3 (Peak Size) - Approx 11x11
+            [ [0,0,0,5,4,3,4,5,0,0,0],[0,0,5,4,3,2,3,4,5,0,0],[0,5,4,3,2,1,2,3,4,5,0],[5,4,3,2,1,1,1,2,3,4,5],[4,3,2,1,1,1,1,1,2,3,4],[3,2,1,1,1,1,1,1,1,2,3],[4,3,2,1,1,1,1,1,2,3,4],[5,4,3,2,1,1,1,2,3,4,5],[0,5,4,3,2,1,2,3,4,5,0],[0,0,5,4,3,2,3,4,5,0,0],[0,0,0,5,4,3,4,5,0,0,0] ],
+             // Frame 4 (Cooling, Darkening) - Approx 11x11
+            [ [0,0,0,8,7,6,7,8,0,0,0],[0,0,8,7,6,5,6,7,8,0,0],[0,8,7,6,5,5,5,6,7,8,0],[8,7,6,5,5,6,5,5,6,7,8],[7,6,5,5,6,7,6,5,5,6,7],[6,5,5,6,7,8,7,6,5,5,6],[7,6,5,5,6,7,6,5,5,6,7],[8,7,6,5,5,6,5,5,6,7,8],[0,8,7,6,5,5,5,6,7,8,0],[0,0,8,7,6,5,6,7,8,0,0],[0,0,0,8,7,6,7,8,0,0,0] ],
+             // Frame 5 (Dissipating) - Approx 11x11 (more sparse)
+            [ [0,0,0,0,8,0,8,0,0,0,0],[0,0,8,0,7,6,7,0,8,0,0],[0,8,7,0,6,0,6,0,7,8,0],[8,0,6,5,0,7,0,5,6,0,8],[7,6,0,6,7,0,7,6,0,6,7],[0,0,5,7,0,8,0,7,5,0,0],[7,6,0,6,7,0,7,6,0,6,7],[8,0,6,5,0,7,0,5,6,0,8],[0,8,7,0,6,0,6,0,7,8,0],[0,0,8,0,7,6,7,0,8,0,0],[0,0,0,0,8,0,8,0,0,0,0] ],
+             // Frame 6 (Fragments) - Approx 11x11 (very sparse)
+            [ [0,0,0,0,0,8,0,0,0,0,0],[0,0,0,8,0,7,0,8,0,0,0],[0,0,7,0,0,0,0,0,7,0,0],[0,8,0,6,0,0,0,6,0,8,0],[0,0,0,7,0,8,0,7,0,0,0],[8,7,0,0,8,0,8,0,0,7,8],[0,0,0,7,0,8,0,7,0,0,0],[0,8,0,6,0,0,0,6,0,8,0],[0,0,7,0,0,0,0,0,7,0,0],[0,0,0,8,0,7,0,8,0,0,0],[0,0,0,0,0,8,0,0,0,0,0] ]
+        ];
+
+        // --- Variable Timing --- (Must sum roughly to baseTotalAnimationTime)
+        const frameDurations = [80, 90, 150, 200, 280, 400]; // ms per frame
+
+        // --- Animation State ---
+        let currentFrameIndex = 0;
+        let lastFrameTime = 0;
+        let accumulatedTime = 0;
+        let particles = [];
+        let sparks = [];
+        let particlesSpawned = false; // Prevent respawning on loop
+        let drawingCoreFrames = true; // Switch to only particles later
+        let currentShake = { x: 0, y: 0, duration: 0 };
+        let timeSinceStart = 0; // Track total time for looping/resetting
+
+        // Target scale for each frame (for tweening)
+        const targetScales = [1.0, 1.5, 2.0, 1.8, 1.6, 1.4];
+        let currentScale = 1.0;
+        const scaleLerpFactor = 0.15; // How quickly scale catches up
+
+        // --- Particle Class (Simplified) ---
+        class Particle {
+            constructor(x, y, colorIndex) {
+                this.x = x;
+                this.y = y;
+                this.size = pixelSize * (0.8 + Math.random() * 0.4); // Slight size variation
+                this.color = palette[colorIndex];
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 2.5; // Pixels per frame update
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed * (0.8 + Math.random()*0.4); // Less vertical push initially
+                this.lifespan = 50 + Math.random() * 40; // Frames
+                this.gravity = 0.03 + Math.random() * 0.04; // Slight downward pull
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += this.gravity;
+                this.lifespan--;
+                this.size *= 0.99; // Optional: shrink
+                this.rotation += this.rotationSpeed;
+            }
+
+            draw(ctx) {
+                if (this.lifespan <= 0 || this.size < 1) return;
+                const alpha = Math.max(0, this.lifespan / 50); // Fade out
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+
+                // Save context for rotation
+                ctx.save();
+                // Translate to particle center
+                ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+                ctx.rotate(this.rotation);
+                // Draw centered rectangle
+                ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+                // Restore context
+                ctx.restore();
+
+                ctx.globalAlpha = 1.0; // Reset alpha
+            }
+        }
+
+         // --- Spark Class (Simplified Lines) ---
+        class Spark {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 4 + Math.random() * 5; // Faster than particles
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.lifespan = 15 + Math.random() * 15; // Shorter lifespan
+                this.length = 10 + Math.random() * 15;
+                this.color = Math.random() > 0.3 ? palette[2] : palette[1]; // Yellow or White
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.lifespan--;
+                this.length *= 0.95; // Shrink length
+            }
+
+            draw(ctx) {
+                if (this.lifespan <= 0 || this.length < 2) return;
+                const alpha = Math.max(0, this.lifespan / 15);
+                ctx.globalAlpha = alpha;
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 1 + Math.random(); // Thickness variation
+
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                // Calculate tail position based on velocity
+                const tailX = this.x - this.vx * (this.length / 50); // Adjust multiplier for tail length vs speed
+                const tailY = this.y - this.vy * (this.length / 50);
+                ctx.lineTo(tailX, tailY);
+                ctx.stroke();
+
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+
+        // --- Helper Functions ---
+        function getRandom(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+        function lerp(a, b, t) {
+             return a + (b - a) * t;
+        }
+
+         // --- Spawner Functions ---
+        function spawnParticlesFromFrame(frameIndex) {
+            const frameData = frames[frameIndex];
+            if (!frameData) return;
+            const frameRows = frameData.length;
+            const frameCols = frameData[0].length;
+            const framePixelWidth = frameCols * pixelSize;
+            const framePixelHeight = frameRows * pixelSize;
+            const startX = (canvas.width - framePixelWidth) / 2; // Base centering position
+            const startY = (canvas.height - framePixelHeight) / 2;
+
+            for (let r = 0; r < frameRows; r++) {
+                for (let c = 0; c < frameCols; c++) {
+                    const colorIndex = frameData[r][c];
+                    if (colorIndex > 0 && Math.random() < particleSpawnChance) {
+                        const px = startX + c * pixelSize;
+                        const py = startY + r * pixelSize;
+                        particles.push(new Particle(px, py, colorIndex));
+                    }
+                }
+            }
+        }
+
+        function spawnInitialSparks() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+             for (let i = 0; i < sparksPerFrame * 1.5; i++) { // More sparks initially
+                sparks.push(new Spark(centerX, centerY));
+            }
+        }
+         function spawnMidSparks() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+             for (let i = 0; i < sparksPerFrame; i++) {
+                sparks.push(new Spark(centerX, centerY));
+            }
+        }
+
+        // --- Effect Functions ---
+        function triggerScreenShake(intensity, duration) {
+             currentShake.intensity = intensity;
+             currentShake.duration = duration; // Duration in frames
+        }
+
+        function updateScreenShake() {
+            if (currentShake.duration > 0) {
+                currentShake.duration--;
+                const amplitude = currentShake.intensity * (currentShake.duration / 10); // Fade shake
+                currentShake.x = getRandom(-amplitude, amplitude);
+                currentShake.y = getRandom(-amplitude, amplitude);
+            } else {
+                currentShake.x = 0;
+                currentShake.y = 0;
+            }
+        }
+
+        function toggleGlow(enable) {
+            if (enable) {
+                canvas.classList.add('glow');
+            } else {
+                canvas.classList.remove('glow');
+            }
+        }
+
+
+        // --- Drawing Function ---
+        function drawCoreFrame(frameIndex, scale) {
+            const frameData = frames[frameIndex];
+            if (!frameData) return;
+
+            const frameRows = frameData.length;
+            const frameCols = frameData[0].length;
+            const framePixelWidth = frameCols * pixelSize;
+            const framePixelHeight = frameRows * pixelSize;
+
+            // Calculate center based on *unscaled* size first
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            ctx.save(); // Save context before transforms
+
+            // Apply scaling FROM the center
+            ctx.translate(centerX, centerY);
+            ctx.scale(scale, scale);
+            ctx.translate(-centerX, -centerY);
+
+             // Calculate top-left corner based on *scaled* size for drawing positions
+            const scaledWidth = framePixelWidth * scale;
+            const scaledHeight = framePixelHeight * scale;
+            const startX = (canvas.width - scaledWidth) / 2;
+            const startY = (canvas.height - scaledHeight) / 2;
+            const scaledPixelSize = pixelSize * scale;
+
+
+            // Disable smoothing for crisp pixels
+            ctx.imageSmoothingEnabled = false;
+
+            // Iterate over the frame data and draw pixels
+            for (let r = 0; r < frameRows; r++) {
+                for (let c = 0; c < frameCols; c++) {
+                    const colorIndex = frameData[r][c];
+                    if (colorIndex > 0 && colorIndex < palette.length) {
+                        ctx.fillStyle = palette[colorIndex];
+                        const jitterX = (Math.random() - 0.5) * 0.5 * scale; // Subtle jitter
+                        const jitterY = (Math.random() - 0.5) * 0.5 * scale;
+                        const drawX = startX + c * scaledPixelSize + jitterX;
+                        const drawY = startY + r * scaledPixelSize + jitterY;
+                        ctx.fillRect(drawX, drawY, scaledPixelSize, scaledPixelSize);
+                    }
+                }
+            }
+
+            ctx.restore(); // Restore context after transforms
+        }
+
+        // --- Animation Loop ---
+        function animationLoop(timestamp) {
+            const deltaTime = timestamp - lastFrameTime;
+            lastFrameTime = timestamp;
+            // Safety check for large delta times (e.g., tabbed away)
+            if (deltaTime > 100) {
+                requestAnimationFrame(animationLoop);
+                return;
+            }
+
+            accumulatedTime += deltaTime;
+            timeSinceStart += deltaTime;
+
+             // Calculate total duration for resetting
+            const totalDuration = frameDurations.reduce((sum, dur) => sum + dur, 0) + 500; // Add buffer for particles
+
+             // --- Reset Logic ---
+             if (timeSinceStart > totalDuration) {
+                 currentFrameIndex = 0;
+                 accumulatedTime = 0;
+                 timeSinceStart = 0;
+                 particles = [];
+                 sparks = [];
+                 particlesSpawned = false;
+                 drawingCoreFrames = true;
+                 currentScale = targetScales[0]; // Reset scale
+                 // Don't start immediately on frame 0, let the loop handle it
+             }
+
+
+            // --- Frame Advancement & Effects ---
+            const currentFrameDuration = frameDurations[currentFrameIndex] || 100; // Fallback duration
+
+            if (accumulatedTime >= currentFrameDuration) {
+                 // Reset accumulated time correctly
+                accumulatedTime -= currentFrameDuration;
+
+                 // Advance frame ONLY if not looping back to 0 this cycle
+                if (timeSinceStart <= frameDurations.reduce((sum, dur) => sum + dur, 0)) {
+                     currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+                }
+
+
+                // --- Trigger Effects Based on NEW Frame Index ---
+                if (screenShakeFrames.includes(currentFrameIndex)) {
+                     triggerScreenShake(2 + currentFrameIndex, 8); // Intensity, duration(frames)
+                 }
+
+                 toggleGlow(glowFrames.includes(currentFrameIndex));
+
+                 // Spawn particles logic
+                if (currentFrameIndex >= particleSpawnFrameStart && !particlesSpawned) {
+                     // Spawn from the *previous* frame data for better visual transition
+                     spawnParticlesFromFrame(currentFrameIndex - 1);
+                     particlesSpawned = true;
+                     drawingCoreFrames = false; // Switch to particle drawing
+                 }
+
+                 // Spawn sparks logic
+                 if (currentFrameIndex >= sparkSpawnFrameStart && currentFrameIndex <= sparkSpawnFrameEnd) {
+                     if (currentFrameIndex === sparkSpawnFrameStart) spawnInitialSparks();
+                     else spawnMidSparks();
+                 }
+            }
+
+             // --- Update Effects ---
+            updateScreenShake();
+            currentScale = lerp(currentScale, targetScales[currentFrameIndex] || 1.0, scaleLerpFactor);
+
+            // --- Update Physics ---
+            particles.forEach(p => p.update());
+            sparks.forEach(s => s.update());
+
+             // Filter out dead particles/sparks
+            particles = particles.filter(p => p.lifespan > 0 && p.size >= 1);
+            sparks = sparks.filter(s => s.lifespan > 0 && s.length >= 1);
+
+
+            // --- Drawing ---
+            ctx.save(); // Save before clearing & shake
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Apply screen shake translation
+            ctx.translate(currentShake.x, currentShake.y);
+
+            // Draw core frame OR particles
+            if (drawingCoreFrames && currentFrameIndex < frames.length) {
+                 drawCoreFrame(currentFrameIndex, currentScale);
+            } else {
+                 // Draw particles only after spawning starts
+                particles.forEach(p => p.draw(ctx));
+            }
+
+             // Always draw sparks (they exist alongside core frames & particles)
+            sparks.forEach(s => s.draw(ctx));
+
+
+            ctx.restore(); // Restore after shake
+
+            // Request the next frame
+            requestAnimationFrame(animationLoop);
+        }
+
+        // --- Start ---
+        // Initial draw of the first frame (optional, loop handles it)
+        // drawCoreFrame(currentFrameIndex, currentScale);
+        toggleGlow(glowFrames.includes(currentFrameIndex)); // Set initial glow if needed
+        // Start the animation loop
+        requestAnimationFrame(animationLoop);
+
+    </script>
+
+</body>
+</html>

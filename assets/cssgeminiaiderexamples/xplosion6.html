@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performant CSS/JS Pixel Explosion</title>
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            background-color: #ddd; /* Light gray background */
+            margin: 0;
+            overflow: hidden;
+        }
+
+        :root {
+            /* Define colors based on the sprite */
+            --pixel-white: #fefeff;
+            --pixel-lyellow: #fefc98;
+            --pixel-yellow: #fad924;
+            --pixel-orange: #ef9e23;
+            --pixel-red: #b7431a;
+            --pixel-dred: #7a2b1b;
+            --pixel-brown: #442434;
+            --pixel-black: #140d13;
+
+            /* Define the size of one 'pixel' */
+            --pixel-size: 8px;
+        }
+
+        .pixel-explosion {
+            position: relative;
+            width: var(--pixel-size); /* Base element is one pixel */
+            height: var(--pixel-size);
+            /* Basic styles, background/shadow handled by frame classes */
+            background: transparent; /* Start transparent */
+            box-shadow: none; /* Ensure no default shadow */
+
+            /* Optional: Add transition for opacity if you want fade in/out */
+            /* transition: opacity 0.1s linear; */
+
+            /* Critical for pixel art look */
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+
+            /* Start hidden, JS will make it visible */
+            opacity: 0;
+        }
+
+        /* --- Define EACH FRAME as a separate class --- */
+        /* Helper for pixel positioning: calc(var(--pixel-size) * X_OFFSET) calc(var(--pixel-size) * Y_OFFSET) 0 0 COLOR */
+
+        .pixel-explosion.frame-1 {
+            opacity: 1;
+            background: var(--pixel-lyellow);
+            box-shadow:
+                /* Core */ calc(var(--pixel-size) * 1) 0 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -1) 0 0 0 var(--pixel-yellow), 0 calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow), 0 calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow),
+                /* Outer Orange */ calc(var(--pixel-size) * 2) 0 0 0 var(--pixel-orange), calc(var(--pixel-size) * -2) 0 0 0 var(--pixel-orange), 0 calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange), 0 calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-orange);
+            transform: scale(1.5);
+        }
+
+        .pixel-explosion.frame-2 {
+             opacity: 1;
+             background: var(--pixel-white);
+             box-shadow: /* Simplified - Capturing essence */
+                /* White/LYellow Core */ calc(var(--pixel-size) * 1) 0 0 0 var(--pixel-lyellow), calc(var(--pixel-size) * -1) 0 0 0 var(--pixel-lyellow), 0 calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow), 0 calc(var(--pixel-size) * -1) 0 0 var(--pixel-lyellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-lyellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-white),
+                 /* Yellow Layer */ calc(var(--pixel-size) * 2) 0 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) 0 0 0 var(--pixel-yellow), 0 calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), 0 calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow),
+                /* Outer Orange */ calc(var(--pixel-size) * 3) 0 0 0 var(--pixel-orange), calc(var(--pixel-size) * -3) 0 0 0 var(--pixel-orange), 0 calc(var(--pixel-size) * 3) 0 0 var(--pixel-orange), 0 calc(var(--pixel-size) * -3) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 3) calc(var(--pixel-size) * 1) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -3) calc(var(--pixel-size) * -1) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 3) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -3) 0 0 var(--pixel-orange);
+            transform: scale(1.8);
+        }
+
+        .pixel-explosion.frame-3 {
+             opacity: 1;
+             background: var(--pixel-white);
+             box-shadow: /* Simplified */
+                /* White/LYellow Core */ calc(var(--pixel-size) * 1) 0 0 0 var(--pixel-lyellow), calc(var(--pixel-size) * -1) 0 0 0 var(--pixel-lyellow), 0 calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow), 0 calc(var(--pixel-size) * -1) 0 0 var(--pixel-white), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-lyellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-white), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-lyellow),
+                 /* Yellow Layer */ calc(var(--pixel-size) * 2) 0 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) 0 0 0 var(--pixel-yellow), 0 calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), 0 calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -2) 0 0 var(--pixel-yellow),
+                /* Outer Orange/Red Layer */ calc(var(--pixel-size) * 3) 0 0 0 var(--pixel-orange), calc(var(--pixel-size) * -3) 0 0 0 var(--pixel-orange), 0 calc(var(--pixel-size) * 3) 0 0 var(--pixel-orange), 0 calc(var(--pixel-size) * -3) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 3) calc(var(--pixel-size) * 1) 0 0 var(--pixel-red), calc(var(--pixel-size) * -3) calc(var(--pixel-size) * -1) 0 0 var(--pixel-red), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 3) 0 0 var(--pixel-red), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -3) 0 0 var(--pixel-red), calc(var(--pixel-size) * 3) calc(var(--pixel-size) * 2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 3) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -3) 0 0 var(--pixel-orange), calc(var(--pixel-size) * -3) calc(var(--pixel-size) * -2) 0 0 var(--pixel-orange), calc(var(--pixel-size) * 4) 0 0 0 var(--pixel-red), calc(var(--pixel-size) * -4) 0 0 0 var(--pixel-red), 0 calc(var(--pixel-size) * 4) 0 0 var(--pixel-red), 0 calc(var(--pixel-size) * -4) 0 0 var(--pixel-red);
+            transform: scale(2.2);
+        }
+
+        .pixel-explosion.frame-4 {
+             opacity: 1;
+             background: var(--pixel-red);
+             box-shadow: /* Simplified smoke/debris */
+                /* Red Core */ calc(var(--pixel-size) * 1) 0 0 0 var(--pixel-dred), calc(var(--pixel-size) * -1) 0 0 0 var(--pixel-red), 0 calc(var(--pixel-size) * 1) 0 0 var(--pixel-dred), 0 calc(var(--pixel-size) * -1) 0 0 var(--pixel-red), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-dred), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-red), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-red), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0 0 var(--pixel-dred),
+                /* Dark Red/Brown Layer */ calc(var(--pixel-size) * 2) 0 0 0 var(--pixel-dred), calc(var(--pixel-size) * -2) 0 0 0 var(--pixel-dred), 0 calc(var(--pixel-size) * 2) 0 0 var(--pixel-dred), 0 calc(var(--pixel-size) * -2) 0 0 var(--pixel-dred), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-brown), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-brown), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-brown), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-brown), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-brown), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-brown), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-brown), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-brown),
+                /* Scattered Black bits */ calc(var(--pixel-size) * 3) calc(var(--pixel-size) * 0) 0 0 var(--pixel-black), calc(var(--pixel-size) * -3) calc(var(--pixel-size) * 1) 0 0 var(--pixel-black), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 3) 0 0 var(--pixel-black), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -3) 0 0 var(--pixel-black), calc(var(--pixel-size) * 3) calc(var(--pixel-size) * 3) 0 0 var(--pixel-black), calc(var(--pixel-size) * -3) calc(var(--pixel-size) * -2) 0 0 var(--pixel-black);
+             transform: scale(2.0);
+        }
+
+        .pixel-explosion.frame-5 {
+            opacity: 1;
+            background: var(--pixel-dred);
+            box-shadow: /* More broken up */
+                calc(var(--pixel-size) * 1) 0 0 0 var(--pixel-brown), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-dred), 0 calc(var(--pixel-size) * -1) 0 0 var(--pixel-brown), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 1) 0 0 var(--pixel-dred), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -1) 0 0 var(--pixel-brown), calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 2) 0 0 var(--pixel-dred), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -2) 0 0 var(--pixel-brown), calc(var(--pixel-size) * 3) calc(var(--pixel-size) * -1) 0 0 var(--pixel-black), calc(var(--pixel-size) * -3) calc(var(--pixel-size) * 2) 0 0 var(--pixel-black), calc(var(--pixel-size) * 0) calc(var(--pixel-size) * 3) 0 0 var(--pixel-black), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 3) 0 0 var(--pixel-black), calc(var(--pixel-size) * -2) calc(var(--pixel-size) * -3) 0 0 var(--pixel-black);
+             transform: scale(1.8);
+        }
+
+        .pixel-explosion.frame-6 {
+             opacity: 0.9; /* Start fading slightly */
+             background: transparent; /* Core fades */
+             box-shadow: /* Just fragments */
+                calc(var(--pixel-size) * 1) calc(var(--pixel-size) * 1) 0 0 var(--pixel-brown), calc(var(--pixel-size) * -2) 0 0 0 var(--pixel-black), 0 calc(var(--pixel-size) * -2) 0 0 var(--pixel-dred), calc(var(--pixel-size) * 3) calc(var(--pixel-size) * -1) 0 0 var(--pixel-black), calc(var(--pixel-size) * -1) calc(var(--pixel-size) * 3) 0 0 var(--pixel-black), calc(var(--pixel-size) * 2) calc(var(--pixel-size) * 2) 0 0 var(--pixel-black), calc(var(--pixel-size) * -3) calc(var(--pixel-size) * -3) 0 0 var(--pixel-black);
+            transform: scale(1.6);
+        }
+        /* Frame 7 could be an empty state or omitted if loop goes back to frame-1 */
+
+    </style>
+</head>
+<body>
+
+    <div class="pixel-explosion" id="explosionElement"></div>
+
+    <p style="position:absolute; bottom: 10px; font-family: sans-serif; color: #555; text-align: center; width: 100%;">
+        JS Controlled CSS Pixel Explosion
+    </p>
+
+    <script>
+        const explosionElement = document.getElementById('explosionElement');
+        const frameClasses = [
+            'frame-1',
+            'frame-2',
+            'frame-3',
+            'frame-4',
+            'frame-5',
+            'frame-6'
+            // Add more frame classes if needed
+        ];
+        const totalAnimationTime = 800; // Total duration in milliseconds (like the CSS version)
+        const frameDuration = totalAnimationTime / frameClasses.length;
+
+        let currentFrameIndex = 0;
+        let intervalId = null;
+
+        function nextFrame() {
+            // Remove the previous frame's class (if any)
+            // Use spread operator in case the element has other classes in the future
+            explosionElement.classList.remove(...frameClasses);
+
+            // Add the current frame's class
+            explosionElement.classList.add(frameClasses[currentFrameIndex]);
+
+            // Make sure it's visible (important for the very first frame)
+             if (explosionElement.style.opacity !== '1') {
+               explosionElement.style.opacity = '1';
+             }
+
+
+            // Move to the next frame index, looping back to 0
+            currentFrameIndex = (currentFrameIndex + 1) % frameClasses.length;
+
+             // Optional: Add a slight delay/pause at the end before looping
+             // if (currentFrameIndex === 0) {
+             //    clearInterval(intervalId);
+             //    setTimeout(() => {
+             //        intervalId = setInterval(nextFrame, frameDuration);
+             //    }, 300); // Pause for 300ms
+             // }
+        }
+
+        // Start the animation loop
+        intervalId = setInterval(nextFrame, frameDuration);
+
+        // Optional: Call nextFrame once immediately to show the first frame without delay
+        // nextFrame(); // Uncomment this if you want the first frame instantly
+
+    </script>
+
+</body>
+</html>

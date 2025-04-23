@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Pixel Explosion 3</title>
+<style>
+  body { display: grid; place-items: center; min-height: 100vh; background: #111; }
+
+  .explosion-element-3 {
+    width: 10px; /* Core element size */
+    height: 10px;
+    background: red; /* Center pixel color */
+    border-radius: 0;
+    position: relative;
+    animation: explode-3 1.2s ease-in-out forwards;
+    /* Make sure box-shadows appear */
+    overflow: visible; /* Not strictly needed but good practice */
+  }
+
+  @keyframes explode-3 {
+    0% {
+       /* Start normal size, no shadow */
+       transform: scale(1);
+       box-shadow: 0 0 0 0 transparent;
+       background: red;
+       opacity: 1;
+    }
+    20% {
+        /* Quickly shrink */
+        transform: scale(0);
+        background: white; /* Flash */
+        box-shadow: 0 0 0 0 transparent;
+        opacity: 1;
+    }
+    21% {
+        /* Start expanding shadows immediately after shrinking */
+        transform: scale(0);
+        opacity: 1;
+        /* Define initial small shadows */
+        box-shadow:
+          /* Layer 1 (adjacent) */
+          10px 0 0 0px red, -10px 0 0 0px orange, 0 10px 0 0px yellow, 0 -10px 0 0px orange,
+          /* Layer 1 (diagonal) */
+          10px 10px 0 0px yellow, -10px 10px 0 0px orange, 10px -10px 0 0px yellow, -10px -10px 0 0px orange;
+
+    }
+    100% {
+        /* Expand shadows far out and make them transparent */
+        transform: scale(0); /* Core remains small */
+        opacity: 0; /* Fade entire effect */
+        background: transparent;
+         /* Define final large, faded shadows */
+        box-shadow:
+          /* Layer 1 (adjacent) */
+          80px 0 0 0px transparent, -80px 0 0 0px transparent, 0 80px 0 0px transparent, 0 -80px 0 0px transparent,
+          /* Layer 1 (diagonal) */
+          80px 80px 0 0px transparent, -80px 80px 0 0px transparent, 80px -80px 0 0px transparent, -80px -80px 0 0px transparent,
+          /* Layer 2 (further out) */
+          120px 0 0 0px transparent, -120px 0 0 0px transparent, 0 120px 0 0px transparent, 0 -120px 0 0px transparent;
+    }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="explosion-element-3"></div>
+
+</body>
+</html>

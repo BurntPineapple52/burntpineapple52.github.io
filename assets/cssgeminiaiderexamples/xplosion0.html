@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Pixel Explosion 1</title>
+<style>
+  body { display: grid; place-items: center; min-height: 100vh; background: #111; }
+
+  .explosion-container {
+    position: relative;
+    width: 150px; /* Adjust size as needed */
+    height: 150px;
+  }
+
+  .pixel {
+    position: absolute;
+    width: calc(150px / 3); /* Size of one pixel */
+    height: calc(150px / 3);
+    background: orange;
+    /* Start all pixels at the center */
+    top: calc(50% - (150px / 3 / 2));
+    left: calc(50% - (150px / 3 / 2));
+    border-radius: 0; /* Sharp edges */
+    opacity: 0; /* Start invisible */
+    animation: explode-1 0.8s ease-out forwards;
+  }
+
+  @keyframes explode-1 {
+    0% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      /* Move to final grid position & slightly overshoot/scale down */
+      transform: translate(var(--tx), var(--ty)) scale(0.5);
+    }
+  }
+
+  /* --- Define position and delay for each pixel --- */
+  /* We use CSS variables --tx, --ty for the final translate */
+
+  /* Row 1 */
+  .pixel:nth-child(1) { --tx: -50px; --ty: -50px; animation-delay: 0.1s; background: #ffcc00; }
+  .pixel:nth-child(2) { --tx: 0px;   --ty: -50px; animation-delay: 0.0s; background: #ffaa00; }
+  .pixel:nth-child(3) { --tx: 50px;  --ty: -50px; animation-delay: 0.1s; background: #ffcc00; }
+  /* Row 2 */
+  .pixel:nth-child(4) { --tx: -50px; --ty: 0px;   animation-delay: 0.05s; background: #ff8800; }
+  .pixel:nth-child(5) { --tx: 0px;   --ty: 0px;   /* Center - moves least/fastest */ animation-delay: 0s; background: #ff6600;}
+  .pixel:nth-child(6) { --tx: 50px;  --ty: 0px;   animation-delay: 0.05s; background: #ff8800; }
+  /* Row 3 */
+  .pixel:nth-child(7) { --tx: -50px; --ty: 50px;  animation-delay: 0.15s; background: #ffcc00; }
+  .pixel:nth-child(8) { --tx: 0px;   --ty: 50px;  animation-delay: 0.05s; background: #ffaa00; }
+  .pixel:nth-child(9) { --tx: 50px;  --ty: 50px;  animation-delay: 0.15s; background: #ffcc00; }
+
+</style>
+</head>
+<body>
+
+<div class="explosion-container">
+  <div class="pixel"></div>
+  <div class="pixel"></div>
+  <div class="pixel"></div>
+  <div class="pixel"></div>
+  <div class="pixel"></div>
+  <div class="pixel"></div>
+  <div class="pixel"></div>
+  <div class="pixel"></div>
+  <div class="pixel"></div>
+</div>
+
+</body>
+</html>

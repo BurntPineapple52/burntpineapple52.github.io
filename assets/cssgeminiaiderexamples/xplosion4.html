@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repeating Bay Sparks Explosion</title>
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            background-color: #0a0a0a; /* Dark background */
+            overflow: hidden; /* Prevent scrollbars if sparks go off-screen */
+            margin: 0;
+        }
+
+        .explosion-container {
+            position: relative;
+            /* Container doesn't need explicit size,
+               it's just an anchor point */
+            width: 1px;
+            height: 1px;
+            /* Optional: Add perspective for a subtle 3D feel */
+            /* perspective: 600px; */
+        }
+
+        .spark {
+            position: absolute;
+            /* Positioned at the center of the container via transform later */
+            top: 0;
+            left: 0;
+            width: 35px; /* Length of the spark */
+            height: 2px; /* Thickness of the spark */
+            background: linear-gradient(to right, white, #ffd000, #ff6600); /* White-hot -> Orange */
+            border-radius: 1px; /* Slightly rounded ends */
+            transform-origin: 0% 50%; /* Rotate/scale from the "base" */
+            opacity: 0; /* Start invisible */
+
+            /* Animation setup */
+            animation-name: shoot-spark;
+            animation-timing-function: linear; /* Constant outward speed */
+            animation-iteration-count: infinite; /* <<< REPEAT INDEFINITELY */
+            /* Assign variables via nth-child */
+            animation-duration: var(--duration);
+            animation-delay: var(--delay);
+
+            /* Default values (can be overridden) */
+            --angle: 0deg;
+            --distance: 200px;
+            --duration: 1s;
+            --delay: 0s;
+        }
+
+        @keyframes shoot-spark {
+            0% {
+                opacity: 1; /* Become visible */
+                /* Start slightly outwards and bigger for impact */
+                transform: rotate(var(--angle)) translateX(5px) scaleX(1.2);
+                 /* background: linear-gradient(to right, white, yellow, orange); */ /* Optional: Brighter start */
+            }
+            /* Mid-point example - could adjust color or scale here */
+            /* 50% {
+                transform: rotate(var(--angle)) translateX(calc(var(--distance) / 2)) scaleX(0.8);
+            } */
+            99.9% {
+                 /* Still visible just before disappearing */
+                 opacity: 1;
+                 transform: rotate(var(--angle)) translateX(calc(var(--distance) * 0.99)) scaleX(0.4);
+                 /* background: linear-gradient(to right, yellow, orange, red); */ /* Optional: Redder end */
+            }
+            100% {
+                opacity: 0; /* Fade out completely */
+                /* Ensure it reaches the full distance & is small/gone */
+                transform: rotate(var(--angle)) translateX(var(--distance)) scaleX(0.3);
+                /* This state is held momentarily until the delay restarts the loop */
+            }
+        }
+
+        /* --- Assign Unique Properties to Each Spark --- */
+        /* Stagger delays to create the burst effect */
+        /* Vary angles, distances, durations for randomness */
+
+        .spark:nth-child(1) { --angle: 10deg; --distance: 280px; --duration: 0.7s; --delay: 0.05s; width: 45px; height: 3px;}
+        .spark:nth-child(2) { --angle: 35deg; --distance: 220px; --duration: 1.0s; --delay: 0s; }
+        .spark:nth-child(3) { --angle: 60deg; --distance: 310px; --duration: 0.8s; --delay: 0.1s; height: 1px;}
+        .spark:nth-child(4) { --angle: 85deg; --distance: 250px; --duration: 1.1s; --delay: 0.02s; background: linear-gradient(to right, #ffffcc, #ffaa00); }
+        .spark:nth-child(5) { --angle: 110deg; --distance: 350px; --duration: 0.9s; --delay: 0.15s; } /* Travels far */
+        .spark:nth-child(6) { --angle: 135deg; --distance: 200px; --duration: 0.7s; --delay: 0.08s; width: 30px; }
+        .spark:nth-child(7) { --angle: 160deg; --distance: 290px; --duration: 1.2s; --delay: 0s; } /* Slower */
+        .spark:nth-child(8) { --angle: 185deg; --distance: 240px; --duration: 0.6s; --delay: 0.12s; height: 3px; background: white; } /* Fast, thick */
+        .spark:nth-child(9) { --angle: 210deg; --distance: 330px; --duration: 1.0s; --delay: 0.05s; }
+        .spark:nth-child(10) { --angle: 235deg; --distance: 260px; --duration: 0.8s; --delay: 0.18s; }
+        .spark:nth-child(11) { --angle: 260deg; --distance: 210px; --duration: 1.1s; --delay: 0.03s; width: 25px; height: 1px; } /* Short, thin */
+        .spark:nth-child(12) { --angle: 285deg; --distance: 300px; --duration: 0.9s; --delay: 0.1s; }
+        .spark:nth-child(13) { --angle: 310deg; --distance: 270px; --duration: 0.7s; --delay: 0.06s; }
+        .spark:nth-child(14) { --angle: 335deg; --distance: 320px; --duration: 1.0s; --delay: 0.14s; }
+        .spark:nth-child(15) { --angle: 360deg; --distance: 230px; --duration: 0.8s; --delay: 0.01s; } /* Another straight one */
+
+    </style>
+</head>
+<body>
+
+    <div class="explosion-container">
+        <!-- Add more sparks for a fuller effect -->
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+        <div class="spark"></div>
+    </div>
+
+</body>
+</html>
