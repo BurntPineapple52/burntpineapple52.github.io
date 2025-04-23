@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "CSS Explosion Animations with Gemini 2.5 Pro"
-date: 2025-04-23 12:00:00 -0700
+date: 2025-04-22 12:00:00 -0700
 categories: [coding, ai]
 tags: [css, animations, gemini, ai] 
 ---
