@@ -13,40 +13,40 @@ Working with Gemini 2.5 Pro, I iterated through several approaches to create pur
 Here are the different explosion variants we created, each with a different approach:
 
 ### 1. Basic Pixel Explosion
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion0.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion0.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ### 2. Random Particle Spread  
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion1.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion1.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ### 3. Box-Shadow Expansion
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion2.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion2.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ### 4. Repeating Spark Burst
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion4.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion4.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ### 5. Frame-by-Frame Sprite
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion5.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion5.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ### 6. JS-Controlled CSS Frames
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion6.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion6.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ### 7. Canvas Pixel Animation
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion7.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion7.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ### 8. Enhanced Canvas Animation
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion8.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion8.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ### 9. Procedural Canvas Explosion
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion9.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion9.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ### 10. Single Burst Explosion
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion10.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion10.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ### 11. Improved Single Burst
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion11.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion11.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ### 12. Color Cooldown Effect
-{% include_relative ../../assets/cssgeminiaiderexamples/xplosion12.html %}
+<iframe src="/assets/cssgeminiaiderexamples/xplosion12.html" style="width:100%; height:200px; border:none;"></iframe>
 
 ## Development Process
 
