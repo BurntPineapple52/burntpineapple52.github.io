@@ -13,40 +13,40 @@ Working with Gemini 2.5 Pro, I iterated through several approaches to create pur
 Here are the different explosion variants we created, each with a different approach:
 
 ### 1. Basic Pixel Explosion
-{% include explosion0.html %}
+{% include assets/cssgeminiaiderexamples/xplosion0.html %}
 
 ### 2. Random Particle Spread  
-{% include explosion1.html %}
+{% include assets/cssgeminiaiderexamples/xplosion1.html %}
 
 ### 3. Box-Shadow Expansion
-{% include explosion2.html %}
+{% include assets/cssgeminiaiderexamples/xplosion2.html %}
 
 ### 4. Repeating Spark Burst
-{% include explosion4.html %}
+{% include assets/cssgeminiaiderexamples/xplosion4.html %}
 
 ### 5. Frame-by-Frame Sprite
-{% include explosion5.html %}
+{% include assets/cssgeminiaiderexamples/xplosion5.html %}
 
 ### 6. JS-Controlled CSS Frames
-{% include explosion6.html %}
+{% include assets/cssgeminiaiderexamples/xplosion6.html %}
 
 ### 7. Canvas Pixel Animation
-{% include explosion7.html %}
+{% include assets/cssgeminiaiderexamples/xplosion7.html %}
 
 ### 8. Enhanced Canvas Animation
-{% include explosion8.html %}
+{% include assets/cssgeminiaiderexamples/xplosion8.html %}
 
 ### 9. Procedural Canvas Explosion
-{% include explosion9.html %}
+{% include assets/cssgeminiaiderexamples/xplosion9.html %}
 
 ### 10. Single Burst Explosion
-{% include explosion10.html %}
+{% include assets/cssgeminiaiderexamples/xplosion10.html %}
 
 ### 11. Improved Single Burst
-{% include explosion11.html %}
+{% include assets/cssgeminiaiderexamples/xplosion11.html %}
 
 ### 12. Color Cooldown Effect
-{% include explosion12.html %}
+{% include assets/cssgeminiaiderexamples/xplosion12.html %}
 
 ## Development Process
 
@@ -64,4 +64,4 @@ The key takeaways:
 
 Try clicking each animation to see it in action! The later versions incorporate more advanced effects like screen shake, glow, and color transitions.
 
-[View all explosion examples](/assets/cssgeminiaiderexamples/)
+[View all explosion examples](/assets/cssgeminiaiderexamples)
