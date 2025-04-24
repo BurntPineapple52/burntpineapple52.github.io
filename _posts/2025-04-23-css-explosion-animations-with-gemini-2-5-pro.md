@@ -13,40 +13,40 @@ Working with Gemini 2.5 Pro, I iterated through several approaches to create pur
 Here are the different explosion variants we created, each with a different approach:
 
 ### 1. Basic Pixel Explosion
-{% include assets/cssgeminiaiderexamples/xplosion0.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion0.html %}
 
 ### 2. Random Particle Spread  
-{% include assets/cssgeminiaiderexamples/xplosion1.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion1.html %}
 
 ### 3. Box-Shadow Expansion
-{% include assets/cssgeminiaiderexamples/xplosion2.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion2.html %}
 
 ### 4. Repeating Spark Burst
-{% include assets/cssgeminiaiderexamples/xplosion4.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion4.html %}
 
 ### 5. Frame-by-Frame Sprite
-{% include assets/cssgeminiaiderexamples/xplosion5.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion5.html %}
 
 ### 6. JS-Controlled CSS Frames
-{% include assets/cssgeminiaiderexamples/xplosion6.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion6.html %}
 
 ### 7. Canvas Pixel Animation
-{% include assets/cssgeminiaiderexamples/xplosion7.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion7.html %}
 
 ### 8. Enhanced Canvas Animation
-{% include assets/cssgeminiaiderexamples/xplosion8.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion8.html %}
 
 ### 9. Procedural Canvas Explosion
-{% include assets/cssgeminiaiderexamples/xplosion9.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion9.html %}
 
 ### 10. Single Burst Explosion
-{% include assets/cssgeminiaiderexamples/xplosion10.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion10.html %}
 
 ### 11. Improved Single Burst
-{% include assets/cssgeminiaiderexamples/xplosion11.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion11.html %}
 
 ### 12. Color Cooldown Effect
-{% include assets/cssgeminiaiderexamples/xplosion12.html %}
+{% include_relative ../assets/cssgeminiaiderexamples/xplosion12.html %}
 
 ## Development Process
 
