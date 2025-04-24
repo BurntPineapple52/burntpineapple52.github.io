@@ -1,0 +1,15 @@
+{
+  "customModes": [
+    {
+      "slug": "tinyprompt",
+      "name": "tinyprompt",
+      "roleDefinition": "code",
+      "groups": [
+        "read",
+        "edit",
+        "command"
+      ],
+      "source": "project"
+    }
+  ]
+}

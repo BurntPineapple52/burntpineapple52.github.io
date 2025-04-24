@@ -1,0 +1,1 @@
+Review directory-tree.md to understand the layout of the project. 
