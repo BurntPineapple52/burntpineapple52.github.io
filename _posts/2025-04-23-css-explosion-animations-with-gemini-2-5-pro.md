@@ -12,6 +12,8 @@ Working with Gemini 2.5 Pro, I iterated through several approaches to create pur
 
 Here are the different explosion variants we created, each with a different approach:
 
+**NOTE**: these look wonky because I wasn't originally intended to show them here.  This means they aren't centered correctly in the iframe, and the first few will only play on the first load lol.  They could be fixed, but I think you get the picture. 
+
 ### 1. Basic Pixel Explosion
 <iframe src="/assets/cssgeminiaiderexamples/xplosion0.html" style="width:100%; aspect-ratio: 16/9; border:none;"></iframe>
 
@@ -63,5 +65,3 @@ The key takeaways:
 4. **Performance** varies significantly between techniques
 
 Try clicking each animation to see it in action! The later versions incorporate more advanced effects like screen shake, glow, and color transitions.
-
-[View all explosion examples](/assets/cssgeminiaiderexamples/index.html)
