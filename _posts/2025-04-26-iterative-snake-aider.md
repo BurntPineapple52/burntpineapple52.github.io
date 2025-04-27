@@ -27,9 +27,18 @@ Here's the unhinged result of our collaboration:
 
 <div class="responsive-game-container">
   <iframe src="/assets/iterativesnakes/Deepseekv3-0324-Chutes-fp8/Deepseekv3-0324run4.html" 
-          style="position:absolute; top:0; left:0; width:100%; height:100%; border:none; overflow:hidden;">
+          style="position:absolute; top:0; left:0; width:100%; height:100%; border:none; overflow:hidden;"
+          tabindex="0">
   </iframe>
 </div>
+
+<script>
+document.querySelector('.responsive-game-container iframe').addEventListener('keydown', function(e) {
+    if([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+    }
+});
+</script>
 
 <style>
 .responsive-game-container {
