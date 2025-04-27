@@ -2,7 +2,6 @@
 layout: post
 title: "Aider Pong Journey"
 subtitle: "From vulgar snake to even more vulgar pong"
-date: 2025-04-27 12:00:00 -0700
 categories: [coding, ai, games]
 tags: [aider, html5, javascript, pong] 
 author: BurntPineapple
