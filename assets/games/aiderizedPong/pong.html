@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pong Game</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #000;
+        }
+        canvas {
+            border: 1px solid #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Particle system
+        const particles = [];
+        const maxParticles = 100;
+
+        function createParticles(x, y, count, baseSize, velocity) {
+            for (let i = 0; i < count && particles.length < maxParticles; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    size: Math.random() * baseSize + 1,
+                    gray: 255 - Math.floor(Math.random() * 64), // Random bright gray
+                    vx: (Math.random() - 0.5) * velocity,
+                    vy: (Math.random() - 0.5) * velocity,
+                    life: 300 + Math.random() * 200,
+                    born: Date.now()
+                });
+            }
+        }
+
+        function createTrailParticle(x, y) {
+            if (particles.length < maxParticles) {
+                particles.push({
+                    x: x + (Math.random() - 0.5) * 3,
+                    y: y + (Math.random() - 0.5) * 3,
+                    size: Math.random() * 1.5 + 0.5,
+                    gray: 200 + Math.floor(Math.random() * 55),
+                    vx: ball.dx * -0.1,
+                    vy: ball.dy * -0.1,
+                    life: 200 + Math.random() * 100,
+                    born: Date.now()
+                });
+            }
+        }
+
+        function updateParticles() {
+            const now = Date.now();
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                // Remove dead particles
+                if (now - p.born > p.life) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        function drawParticles() {
+            const now = Date.now();
+            ctx.save();
+            particles.forEach(p => {
+                const age = now - p.born;
+                const alpha = 1 - (age / p.life);
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = `rgb(${p.gray}, ${p.gray}, ${p.gray})`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.restore();
+        }
+
+        // Game elements
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 10,
+            dx: 4,
+            dy: 4
+        };
+
+        const paddleHeight = 80;
+        const paddleWidth = 10;
+        const leftPaddle = {
+            x: 10,
+            y: canvas.height / 2 - paddleHeight / 2,
+            dy: 0,
+            speed: 5
+        };
+        const rightPaddle = {
+            x: canvas.width - 20,
+            y: canvas.height / 2 - paddleHeight / 2,
+            dy: 0,
+            speed: 5
+        };
+
+        const keys = {
+            ArrowUp: false,
+            ArrowDown: false
+        };
+
+        const insults = [
+            "Too slow!", "EZ win!", "Git gud!", "Noob!", "LOL!", "Pwned!", "rekt!", "Try again!",
+            "You suck!", "Fucking trash!", "Uninstall!", "Kill yourself!", "Mom's basement!", 
+            "Virgin alert!", "Waste of sperm!", "Cum stain!", "Dickless wonder!", "Fucktard!", 
+            "Shit player!", "Ass clown!", "Cock juggler!", "Turd burglar!", "Piss poor!", 
+            "Fuck off!", "Eat shit!", "Suck my dick!", "Butt pirate!", "Cum dumpster!", 
+            "Worthless!", "Retard!", "Fucko!", "Cunt!", "Bitch!", "Whore!", "Slut!", 
+            "Dickhead!", "Pussy!", "Fuckface!", "Shitstain!", "Asswipe!", "Douche!", 
+            "Cockbite!", "Twat!", "Fucknut!", "Jizz stain!", "Piss ant!", "Scrotum!", 
+            "Taint!", "Ball sack!", "Dick cheese!", "Fuckwad!", "Shit eater!", "Cum guzzler!", 
+            "Ass munch!", "Dick munch!", "Piss baby!", "Cock sucker!", "Fuck boy!", "Pussy boy!", 
+            "Bitch boy!", "Cuck!", "Simp!", "Incel!", "Neckbeard!", "Mouth breather!", 
+            "Window licker!", "Tard!", "Spaz!", "Gimp!", "Cripple!", "Mongoloid!", 
+            "Dipshit!", "Moron!", "Spastic!", "Vegetable!", "Brainlet!", "Smooth brain!", 
+            "Fuck puppet!", "Shit gibbon!", "Cock wombler!", "Dick nozzle!", "Ass sniffer!", 
+            "Ball licker!", "Cum rag!", "Fuck stick!", "Piss flap!", "Twat waffle!", 
+            "Cunt muffin!", "Dick biscuit!", "Ass goblin!", "Shit weasel!", "Fuck nugget!", 
+            "Piss stain!", "Cock jockey!", "Turd polisher!", "Ball fondler!", "Cum sock!", 
+            "Fuck monkey!", "Pussy licker!", "Bitch tits!", "Cunt hair!", "Dick breath!", 
+            "Ass pimple!", "Shit lips!", "Fuck stain!", "Piss drinker!", "Cock knocker!", 
+            "Turd burglar!", "Ball sack!", "Cum dump!", "Fuck bucket!", "Pussy fart!", 
+            "Bitch slap!", "Cunt punt!", "Dick slap!", "Ass hat!", "Shit show!"
+        ];
+
+        let currentMessage = {
+            text: "",
+            x: 0,
+            y: 0,
+            startX: 0,
+            startY: 0,
+            alpha: 1,
+            fadeSpeed: 0.002, // Even slower fade
+            moveSpeed: 1,
+            counter: 0,
+            direction: 1
+        };
+
+        let leftScore = 0;
+        let rightScore = 0;
+        let waitingForInput = true;
+
+        function showMessage(text, fromLeft) {
+            currentMessage = {
+                text: text,
+                startX: fromLeft ? leftPaddle.x + paddleWidth + 20 : rightPaddle.x - 20,
+                startY: fromLeft ? leftPaddle.y + paddleHeight/2 : rightPaddle.y + paddleHeight/2,
+                x: fromLeft ? leftPaddle.x + paddleWidth + 20 : rightPaddle.x - 20,
+                y: fromLeft ? leftPaddle.y + paddleHeight/2 : rightPaddle.y + paddleHeight/2,
+                alpha: 1,
+                fadeSpeed: 0.01,
+                moveSpeed: 1,
+                counter: 0,
+                direction: fromLeft ? 1 : -1
+            };
+        }
+
+        function drawMessage() {
+            if (currentMessage.alpha <= 0) return;
+            
+            // Update message position with wave effect
+            currentMessage.counter += 0.02; // Even slower animation
+            // Float up and slightly outward
+            currentMessage.x = currentMessage.startX + currentMessage.counter * 5 * currentMessage.direction;
+            currentMessage.y = currentMessage.startY - currentMessage.counter * 8;
+            
+            // Very subtle scale effect
+            const scale = 1 + Math.sin(currentMessage.counter) * 0.05;
+            
+            ctx.save();
+            ctx.font = `${20 * scale}px Arial`;
+            ctx.fillStyle = `rgba(255, 255, 255, ${currentMessage.alpha})`; // White text
+            ctx.textAlign = currentMessage.direction > 0 ? 'left' : 'right';
+            ctx.fillText(currentMessage.text, currentMessage.x, currentMessage.y);
+            ctx.restore();
+
+            currentMessage.alpha -= currentMessage.fadeSpeed;
+        }
+
+        // Draw functions
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawPaddle(x, y) {
+            ctx.beginPath();
+            ctx.rect(x, y, paddleWidth, paddleHeight);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawScore() {
+            ctx.font = '32px Arial';
+            ctx.fillStyle = '#fff';
+            ctx.fillText(leftScore, canvas.width / 4, 50);
+            ctx.fillText(rightScore, 3 * canvas.width / 4, 50);
+        }
+
+        function drawCenterLine() {
+            ctx.beginPath();
+            ctx.setLineDash([10, 10]);
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.strokeStyle = '#fff';
+            ctx.stroke();
+        }
+
+        // Game logic
+        function update() {
+            // Update paddle positions (left paddle is AI-controlled)
+            // Original Pong-style AI with controlled imperfections
+            const reactionDelay = 0.5; // Smoother reaction
+            const errorRate = 0.1; // Reduced error rate
+            const smoothFactor = 0.1; // For gradual movement
+            
+            // Only move if ball is coming toward AI paddle
+            if (ball.dx < 0) {
+                // Calculate target with some delay and less randomness
+                const targetY = ball.y - paddleHeight/2 + (Math.random() * 10 - 5);
+                
+                // Gradual movement toward target
+                const direction = targetY - (leftPaddle.y + paddleHeight/2);
+                leftPaddle.dy = direction * smoothFactor;
+                
+                // Occasionally make smaller mistakes
+                if (Math.random() < errorRate) {
+                    leftPaddle.dy *= 0.5; // Smaller error impact
+                }
+            } else {
+                // Smooth return to center when ball is moving away
+                const centerY = canvas.height/2 - paddleHeight/2;
+                const centerDirection = centerY - leftPaddle.y;
+                leftPaddle.dy = centerDirection * smoothFactor;
+            }
+
+            // Right paddle is player-controlled
+            if (keys.ArrowUp) rightPaddle.dy = -rightPaddle.speed;
+            else if (keys.ArrowDown) rightPaddle.dy = rightPaddle.speed;
+            else rightPaddle.dy = 0;
+
+            // Move paddles
+            leftPaddle.y += leftPaddle.dy;
+            rightPaddle.y += rightPaddle.dy;
+
+            // Keep paddles on screen
+            leftPaddle.y = Math.max(0, Math.min(canvas.height - paddleHeight, leftPaddle.y));
+            rightPaddle.y = Math.max(0, Math.min(canvas.height - paddleHeight, rightPaddle.y));
+
+            // Move ball if not waiting for input
+            if (!waitingForInput) {
+                ball.x += ball.dx;
+                ball.y += ball.dy;
+            }
+
+            // Wall collision (top/bottom)
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+                ball.dy = -ball.dy;
+            }
+
+            // Paddle collision
+            if (ball.x - ball.radius < leftPaddle.x + paddleWidth && 
+                ball.y > leftPaddle.y && 
+                ball.y < leftPaddle.y + paddleHeight) {
+                ball.dx = -ball.dx;
+                createParticles(ball.x, ball.y, 8, 2, 3);
+            }
+
+            if (ball.x + ball.radius > rightPaddle.x && 
+                ball.y > rightPaddle.y && 
+                ball.y < rightPaddle.y + paddleHeight) {
+                ball.dx = -ball.dx;
+                createParticles(ball.x, ball.y, 8, 2, 3);
+            }
+
+            // Score points
+            if (ball.x + ball.radius > canvas.width) {
+                leftScore++;
+                createParticles(canvas.width / 4, canvas.height / 2, 15, 3, 2);
+                const insult = insults[Math.floor(Math.random() * insults.length)];
+                showMessage(insult, true);
+                resetBall();
+            }
+
+            if (ball.x - ball.radius < 0) {
+                rightScore++;
+                createParticles(3 * canvas.width / 4, canvas.height / 2, 15, 3, 2);
+                const insult = insults[Math.floor(Math.random() * insults.length)];
+                showMessage(insult, false);
+                resetBall();
+            }
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = 0;
+            ball.dy = 0;
+            waitingForInput = true;
+        }
+
+        // Input handling
+        document.addEventListener('keydown', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = true;
+                if (waitingForInput) {
+                    waitingForInput = false;
+                    ball.dx = 4 * (Math.random() > 0.5 ? 1 : -1);
+                    ball.dy = Math.random() * 4 - 2;
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key in keys) {
+                keys[e.key] = false;
+            }
+        });
+
+        // Main game loop
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawCenterLine();
+            drawParticles();
+            drawBall();
+            drawPaddle(leftPaddle.x, leftPaddle.y);
+            drawPaddle(rightPaddle.x, rightPaddle.y);
+            drawScore();
+            drawMessage();
+            
+            update();
+            updateParticles();
+            
+            // Add ball trail
+            if (!waitingForInput && Math.random() > 0.3) {
+                createTrailParticle(ball.x, ball.y);
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
