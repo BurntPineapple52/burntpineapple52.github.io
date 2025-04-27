@@ -25,7 +25,7 @@ The AI handled all the tedious JavaScript/CSS/Canvas work while I focused on the
 
 Here's the unhinged result of our collaboration:
 
-<iframe width="100%" height="500" src="/assets/iterativesnakes/Deepseekv3-0324-Chutes-fp8/Deepseekv3-0324run4.html"></iframe>
+<iframe width="100%" height="500" src="/assets/iterativesnakes/Deepseekv3-0324-Chutes-fp8/Deepseekv3-0324run4.html" scrolling="no" style="border:none; overflow:hidden;"></iframe>
 
 ## Why This Matters
 
