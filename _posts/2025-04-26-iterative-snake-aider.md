@@ -25,7 +25,21 @@ The AI handled all the tedious JavaScript/CSS/Canvas work while I focused on the
 
 Here's the unhinged result of our collaboration:
 
-<iframe width="100%" height="500" src="/assets/iterativesnakes/Deepseekv3-0324-Chutes-fp8/Deepseekv3-0324run4.html" scrolling="no" style="border:none; overflow:hidden;"></iframe>
+<div class="responsive-game-container">
+  <iframe src="/assets/iterativesnakes/Deepseekv3-0324-Chutes-fp8/Deepseekv3-0324run4.html" 
+          style="position:absolute; top:0; left:0; width:100%; height:100%; border:none; overflow:hidden;">
+  </iframe>
+</div>
+
+<style>
+.responsive-game-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 75%; /* Adjust this percentage according to your game's aspect ratio */
+  height: 0;
+  overflow: hidden;
+}
+</style>
 
 ## Why This Matters
 
