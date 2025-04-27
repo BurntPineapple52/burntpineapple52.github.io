@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Snake Game</title>
+  <style>
+    body {
+      background-color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+    }
+
+    canvas {
+      background-color: #111;
+      border: 2px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const gridSize = 20;
+    const tileCount = canvas.width / gridSize;
+
+    let snake = [{ x: 10, y: 10 }];
+    let food = { x: 15, y: 15 };
+    let dx = 0; // Horizontal velocity
+    let dy = 0; // Vertical velocity
+    let score = 0;
+    let gameSpeed = 150; // Milliseconds per frame (lower value = faster)
+    let gameOver = false;
+
+    // Function to draw the snake
+    function drawSnake() {
+      snake.forEach((part, index) => {
+        ctx.fillStyle = index === 0 ? 'green' : 'lime';  // Head different color
+        ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize, gridSize);
+        ctx.strokeStyle = 'black';  // Add border to the snake
+        ctx.strokeRect(part.x * gridSize, part.y * gridSize, gridSize, gridSize);
+      });
+    }
+
+    // Function to draw the food
+    function drawFood() {
+      ctx.fillStyle = 'red';
+      ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+       ctx.strokeStyle = 'black';  // Add border to the food
+        ctx.strokeRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+    }
+
+    // Function to update the game state
+    function update() {
+      if (gameOver) {
+        return;
+      }
+
+      // Move the snake
+      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+      snake.unshift(head);
+
+      // Check for collision with food
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        generateFood();
+        // Increase game speed progressively
+        if (gameSpeed > 50) {
+             gameSpeed *= 0.96;
+        }
+        clearInterval(gameInterval); // Stop the old interval
+        gameInterval = setInterval(update, gameSpeed); // Start a new interval
+      } else {
+        snake.pop(); // Remove the tail
+      }
+
+      // Check for collision with walls
+      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+        gameOverScreen();
+        return;
+      }
+
+      // Check for collision with self
+      for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+          gameOverScreen();
+          return;
+        }
+      }
+
+      // Clear the canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw the snake and food
+      drawSnake();
+      drawFood();
+
+      // Display score
+      ctx.fillStyle = 'white';
+      ctx.font = '16px sans-serif';
+      ctx.fillText('Score: ' + score, 10, 20);
+    }
+
+
+    // Function to generate food at a random location
+    function generateFood() {
+      food = {
+        x: Math.floor(Math.random() * tileCount),
+        y: Math.floor(Math.random() * tileCount),
+      };
+
+      // Ensure food doesn't spawn on the snake
+      let overlapping = true;
+      while (overlapping) {
+        overlapping = false;
+          for (let i = 0; i < snake.length; i++) {
+            if (food.x === snake[i].x && food.y === snake[i].y) {
+                overlapping = true;
+                food = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount),
+                };
+                break;
+            }
+        }
+      }
+    }
+
+
+    // Function to handle key presses
+    function handleKeyPress(event) {
+      switch (event.key) {
+        case 'ArrowUp':
+          if (dy !== 1) {  // Prevent opposite direction
+            dx = 0;
+            dy = -1;
+          }
+          break;
+        case 'ArrowDown':
+          if (dy !== -1) {
+            dx = 0;
+            dy = 1;
+          }
+          break;
+        case 'ArrowLeft':
+          if (dx !== 1) {
+            dx = -1;
+            dy = 0;
+          }
+          break;
+        case 'ArrowRight':
+          if (dx !== -1) {
+            dx = 1;
+            dy = 0;
+          }
+          break;
+      }
+    }
+
+    // Function to handle game over screen
+    function gameOverScreen() {
+      gameOver = true;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'; // Semi-transparent overlay
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = 'white';
+      ctx.font = '30px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2 - 20);
+      ctx.font = '20px sans-serif';
+      ctx.fillText('Final Score: ' + score, canvas.width / 2, canvas.height / 2 + 20);
+      ctx.fillText('Press Space to Restart', canvas.width / 2, canvas.height / 2 + 60);
+
+      document.addEventListener('keydown', restartGameHandler);
+    }
+
+     // Restart game function
+    function restartGame() {
+      gameOver = false;
+      snake = [{ x: 10, y: 10 }];
+      food = { x: 15, y: 15 };
+      dx = 0;
+      dy = 0;
+      score = 0;
+      gameSpeed = 150;
+      generateFood();
+
+      clearInterval(gameInterval);
+      gameInterval = setInterval(update, gameSpeed);
+
+      document.removeEventListener('keydown', restartGameHandler); // Remove this handler so it's not duplicated
+    }
+
+
+    //Restart Game Handler (using an anonymous function to remove properly)
+    const restartGameHandler = function(event) {
+      if (event.code === 'Space') {
+        restartGame();
+      }
+    }
+
+
+    // Event listeners
+    document.addEventListener('keydown', handleKeyPress);
+
+
+    // Initial food generation
+    generateFood();
+
+    // Game loop
+    let gameInterval = setInterval(update, gameSpeed);
+  </script>
+</body>
+</html>
