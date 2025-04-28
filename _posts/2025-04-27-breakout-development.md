@@ -6,7 +6,7 @@ categories: [coding, ai]
 tags: [aider, html5, javascript, games]
 ---
 
-Development continued on the Breakout game. The current implementation includes:
+Development started on the Breakout. The current implementation includes:
 
 - CRT-style visual effects with scanlines and flicker
 - Paddle controls for mouse, touch and keyboard
