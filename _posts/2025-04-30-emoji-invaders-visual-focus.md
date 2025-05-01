@@ -15,9 +15,8 @@ After focusing heavily on vulgar humor in previous games, I wanted to explore pu
 
 Key stats:
 - Development time: 1 hour
-- Tokens burned: ~45k
-- Emojis animated: 250+
-- FPS on low-end devices: 60 (locked)
+- Number of calls: 61
+- Tokens: 322.8k sent, 38.5k received.
 
 The AI excelled at:
 - Smooth emoji animations
@@ -69,9 +68,9 @@ document.querySelector('.responsive-game-container iframe').addEventListener('ke
 ## Future Directions
 
 Ideas to explore:
+- Mobile functionality 
 - Multi-directional shooting
 - Emoji power-ups
 - Dynamic backgrounds
 - Local multiplayer mode
 
-The constraint of using emojis led to creative solutions I wouldn't have considered otherwise. Proof that limitations can breed innovation!
