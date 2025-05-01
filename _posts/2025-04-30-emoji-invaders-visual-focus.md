@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Emoji Invaders - Visual Focus"
-subtitle: "When performance meets playful aesthetics"
+subtitle: "When performance meets attempted aesthetics"
 categories: [coding, ai, games]
 tags: [aider, html5, javascript, emoji, performance] 
 author: BurntPineapple
@@ -11,7 +11,7 @@ author: BurntPineapple
 
 This time I wanted more focus on the visual stylings - going for that sweet spot where performance meets playful aesthetics. 
 
-I'm not a super visually creative person in the traditional sense (can't draw to save my life), but there's something magical about performant visual juice - it lets you do more with less and reach people who couldn't normally play your game!
+I'm not a super visually creative person in the traditional sense (can't draw to save my life), but there's something magical about performant visual juice - it lets you do more with less and reach people who couldn't normally play your game.
 
 ## Development Highlights
 
@@ -19,7 +19,7 @@ Key stats:
 - Development time: 1 hour
 - Number of calls: 61
 - Tokens: 322.8k sent, 38.5k received.
-- Countless hours burned tinkering with noise effects before settling on emojis
+- Way too many of those tokens were burned trying to generate interesting CSS noise patterns. 
 
 The AI excelled at:
 - Smooth emoji animations that just work
@@ -63,11 +63,10 @@ document.querySelector('.responsive-game-container iframe').addEventListener('ke
 
 ## Lessons Learned
 
-1. **Emojis are powerful AF** - Instant visual appeal without asset loading headaches
+1. **Emojis are useful** - Instant visual appeal without asset loading headaches
 2. **Performance = accessibility** - Fast loading means more people can enjoy your creation
 3. **Constraints breed creativity** - Couldn't make noise effects work? Emojis to the rescue!
-4. **Animation is everything** - Those little motion details make it feel alive
-5. **Bugs are features waiting to happen** - Text disappearing at edges? Game speed too fast after death? Just more polish opportunities!
+4. **Animation is cheap** - Those little motion details make it feel alive, and it only takes a few lines of code
 
 ## Future Directions
 
@@ -77,4 +76,8 @@ Ideas to explore:
 - Emoji power-ups
 - Dynamic backgrounds
 - Local multiplayer mode
+
+
+
+Also I'm having V3 write this for me in aider and it's not good.  I need to explore better workflows, and maybe different models. 
 
