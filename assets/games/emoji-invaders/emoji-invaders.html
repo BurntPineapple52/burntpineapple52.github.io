@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Emoji Space Invaders</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            text-align: center;
+            font-family: monospace;
+            font-size: 24px;
+            overflow: hidden;
+            position: relative;
+        }
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 1s infinite alternate;
+        }
+        @keyframes twinkle {
+            from { opacity: 0.2; }
+            to { opacity: 1; }
+        }
+        #game {
+            margin: 0 auto;
+            width: 600px;
+            height: 600px;
+            border: 1px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+        #player {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px;
+        }
+        .alien {
+            position: absolute;
+            font-size: 24px;
+            animation: retroWobble 2s steps(2, end) infinite;
+            transform-origin: center;
+        }
+        @keyframes retroWobble {
+            0% { transform: rotate(-35deg); }
+            100% { transform: rotate(95deg); }
+        }
+        .bullet {
+            position: absolute;
+            font-size: 10px;
+        }
+        #score {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+        #menu {
+            margin: 0 auto;
+            width: 600px;
+            text-align: center;
+        }
+        #start-btn {
+            background: #333;
+            color: white;
+            border: 2px solid #666;
+            font-size: 24px;
+            padding: 10px 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        #start-btn:hover {
+            background: #444;
+            animation: shake 0.5s infinite;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-2px); }
+            50% { transform: translateX(2px); }
+            75% { transform: translateX(-2px); }
+            100% { transform: translateX(0); }
+        }
+        #ground-container {
+            position: relative;
+            height: 100px;
+            overflow: hidden;
+            margin-top: 50px;
+        }
+        #game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            font-size: 36px;
+        }
+        #level-transition h2 {
+            font-size: 72px;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        #game-over h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        #game-over button {
+            background: #333;
+            color: white;
+            border: 2px solid #666;
+            font-size: 24px;
+            padding: 10px 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        .ground-emoji {
+            position: absolute;
+            font-size: 30px;
+            bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="menu">
+        <h1>Emoji Space Invaders</h1>
+        <button id="start-btn">🚀 Start Game 🚀</button>
+        <div id="ground-container"></div>
+    </div>
+    <div id="game" style="display:none;">
+        <div id="player">🚀</div>
+    </div>
+    <div id="score" style="display:none;">Score: 0</div>
+    <div id="game-over">
+        <h2 id="game-over-title">Game Over</h2>
+        <div id="game-over-message"></div>
+        <div id="final-score">Score: 0</div>
+        <button id="play-again">Play Again</button>
+    </div>
+
+    <script>
+        const game = document.getElementById('game');
+        const player = document.getElementById('player');
+        const scoreDisplay = document.getElementById('score');
+        
+        let playerX = 300;
+        let score = 0;
+        let aliens = [];
+        let bullets = [];
+        const insults = [
+            "Fuck off back to your shitty planet!",
+            "Your whole species is a cosmic mistake!",
+            "I fucked your alien mom last night!",
+            "Eat my plasma dick, space trash!",
+            "Your face looks like a prolapsed anus!",
+            "Your civilization is a fucking joke!",
+            "Suck my human exhaust port!",
+            "I'll skullfuck your entire fleet!",
+            "Your DNA is fucking garbage!",
+            "Die screaming, space cunt!",
+            "Your mother's tentacles were limp!",
+            "Your tech is fucking pathetic!",
+            "I piss on your ancestors' graves!",
+            "Your species deserves extinction!",
+            "Your brain is smaller than my balls!",
+            "I'll turn your homeworld to glass!",
+            "Your leaders are fucking cowards!",
+            "Your entire race is weak as piss!",
+            "I'll skullfuck your queen next!",
+            "Your bloodline ends today, freak!",
+            "Your planet smells like rotten eggs!",
+            "I'll use your corpse as a fleshlight!",
+            "Your species is dumber than rocks!",
+            "Your mother should've swallowed you!",
+            "I'll fuck your entire gene pool!",
+            "Your existence is an insult to evolution!",
+            "Your face makes me want to vomit!",
+            "I'll skullfuck your entire family tree!",
+            "Your kind belongs in a zoo!",
+            "Your breath smells like dog shit!",
+            "I'll use your skull as a toilet!",
+            "Your intelligence is sub-bacterial!",
+            "Your mother was a space whore!",
+            "I'll turn your planet into a parking lot!",
+            "Your species is a cosmic abortion!",
+            "Your face could scare a black hole!",
+            "I'll use your guts as anal beads!",
+            "Your entire race is fucking worthless!",
+            "Your brain is smoother than a marble!",
+            "I'll skullfuck your entire civilization!"
+        ];
+
+        const alienResponses = [
+            "Fuck you, human scum!",
+            "Your mother was a monkey!",
+            "We'll rape your planet!",
+            "Your species is weak!",
+            "Die, pathetic human!",
+            "We'll skullfuck your women!",
+            "Your cities will burn!",
+            "Your DNA is inferior!",
+            "We'll turn Earth into a toilet!",
+            "Your kind deserves extinction!",
+            "We'll fuck your corpses!",
+            "Your technology is primitive!",
+            "We'll use your bones as toothpicks!",
+            "Your planet is ours now!",
+            "We'll skullfuck your leaders!",
+            "Your defenses are pathetic!",
+            "We'll turn your children into slaves!",
+            "Your women will bear our young!",
+            "We'll piss on your graves!",
+            "Your species is a joke!"
+        ];
+        let lastShotTime = 0;
+        const SHOT_COOLDOWN = 1000; // 1 second between shots
+        let gameWidth = 600;
+        let gameHeight = 600;
+        let alienSpeed = 0.07; // 10x slower base speed
+        let alienDirection = 1;
+        let alienDrop = 20;
+        let gameOver = false;
+        let currentLevel = 1;
+        const maxLevelSpeed = 5;
+        
+        // Create aliens
+        function createAliens() {
+            const alienEmojis = ['👾', '👽', '🤖', '👹', '👻'];
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const alien = document.createElement('div');
+                    alien.className = 'alien';
+                    alien.textContent = alienEmojis[row % alienEmojis.length];
+                    alien.style.left = (col * 50 + 50) + 'px';
+                    alien.style.top = (row * 50 + 50) + 'px';
+                    game.appendChild(alien);
+                    aliens.push({
+                        element: alien,
+                        x: col * 50 + 50,
+                        y: row * 50 + 50,
+                        points: [30, 20, 20, 10, 10][row] // Different points per row
+                    });
+                }
+            }
+        }
+        
+        // Move player
+        function movePlayer(e) {
+            if (gameOver) return;
+            
+            if (e.key === 'ArrowLeft' && playerX > 30) {
+                playerX -= 20;
+            }
+            if (e.key === 'ArrowRight' && playerX < gameWidth - 30) {
+                playerX += 20;
+            }
+            if (e.key === ' ') {
+                shoot();
+            }
+            player.style.left = playerX + 'px';
+        }
+        
+        // Shoot bullet
+        function shoot() {
+            if (gameOver) return;
+            
+            const now = Date.now();
+            if (now - lastShotTime < SHOT_COOLDOWN) return;
+            lastShotTime = now;
+            
+            // Create insult message
+            const insult = document.createElement('div');
+            insult.className = 'insult';
+            insult.textContent = insults[Math.floor(Math.random() * insults.length)];
+            insult.style.position = 'absolute';
+            insult.style.left = (playerX - 50) + 'px';
+            insult.style.bottom = '100px';
+            insult.style.color = '#ff5555';
+            insult.style.fontSize = '16px';
+            insult.style.fontFamily = 'monospace';
+            insult.style.whiteSpace = 'nowrap';
+            game.appendChild(insult);
+            
+            // Fade out and remove insult after 1.5 seconds
+            setTimeout(() => {
+                insult.style.transition = 'opacity 0.5s';
+                insult.style.opacity = '0';
+                setTimeout(() => insult.remove(), 500);
+            }, 1000);
+
+            // Create bullet
+            const bullet = document.createElement('div');
+            bullet.className = 'bullet';
+            bullet.textContent = '🔺';
+            bullet.style.left = (playerX + 10) + 'px';
+            bullet.style.bottom = '60px';
+            game.appendChild(bullet);
+            
+            bullets.push({
+                element: bullet,
+                x: playerX + 10,
+                y: gameHeight - 60
+            });
+        }
+        
+        // Move bullets
+        function moveBullets() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].y -= 10;
+                bullets[i].element.style.bottom = (gameHeight - bullets[i].y) + 'px';
+                
+                // Remove bullet if out of bounds
+                if (bullets[i].y < 0) {
+                    game.removeChild(bullets[i].element);
+                    bullets.splice(i, 1);
+                }
+            }
+        }
+        
+        // Move aliens
+        function moveAliens() {
+            let edgeReached = false;
+            
+            for (let alien of aliens) {
+                alien.x += alienSpeed * alienDirection;
+                
+                // Check if any alien reached edge
+                if (alien.x > gameWidth - 30 || alien.x < 30) {
+                    edgeReached = true;
+                }
+                
+                alien.element.style.left = alien.x + 'px';
+            }
+            
+            // Change direction if edge reached
+            if (edgeReached) {
+                alienDirection *= -1;
+                for (let alien of aliens) {
+                    alien.y += alienDrop;
+                    alien.element.style.top = alien.y + 'px';
+                    
+                    // Game over if aliens reach bottom
+                    if (alien.y > gameHeight - 100) {
+                        gameOver = true;
+                        showGameOver(false);
+                    }
+                }
+            }
+        }
+        
+        // Check collisions
+        function checkCollisions() {
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                for (let j = aliens.length - 1; j >= 0; j--) {
+                    if (
+                        bullets[i].x > aliens[j].x - 20 &&
+                        bullets[i].x < aliens[j].x + 20 &&
+                        bullets[i].y < aliens[j].y + 30 &&
+                        bullets[i].y > aliens[j].y - 30
+                    ) {
+                        // Store points before removing alien
+                        const points = aliens[j].points;
+                        // Show alien response before removing
+                        const response = document.createElement('div');
+                        response.className = 'insult';
+                        response.textContent = alienResponses[Math.floor(Math.random() * alienResponses.length)];
+                        response.style.position = 'absolute';
+                        response.style.left = (aliens[j].x - 50) + 'px';
+                        response.style.top = (aliens[j].y - 30) + 'px';
+                        response.style.color = '#55ff55';
+                        response.style.fontSize = '16px';
+                        response.style.fontFamily = 'monospace';
+                        response.style.whiteSpace = 'nowrap';
+                        game.appendChild(response);
+
+                        // Fade out and remove response
+                        setTimeout(() => {
+                            response.style.transition = 'opacity 0.5s';
+                            response.style.opacity = '0';
+                            setTimeout(() => response.remove(), 500);
+                        }, 1000);
+
+                        // Create initial middle finger emoji
+                        const finger = document.createElement('div');
+                        finger.textContent = '🖕';
+                        finger.style.position = 'absolute';
+                        finger.style.left = (aliens[j].x - 15) + 'px';
+                        finger.style.top = (aliens[j].y - 40) + 'px';
+                        finger.style.fontSize = '30px';
+                        finger.style.zIndex = '1000';
+                        game.appendChild(finger);
+
+                        // After 300ms, explode into multiple fingers
+                        setTimeout(() => {
+                            // Remove original finger
+                            finger.remove();
+                            
+                            // Create explosion of fingers
+                            for (let i = 0; i < 8; i++) {
+                                const miniFinger = document.createElement('div');
+                                miniFinger.textContent = '🖕';
+                                miniFinger.style.position = 'absolute';
+                                miniFinger.style.left = (aliens[j].x - 15) + 'px';
+                                miniFinger.style.top = (aliens[j].y - 40) + 'px';
+                                miniFinger.style.fontSize = '20px';
+                                miniFinger.style.zIndex = '1000';
+                                miniFinger.style.transition = 'all 0.5s';
+                                game.appendChild(miniFinger);
+                                
+                                // Animate fingers outward
+                                setTimeout(() => {
+                                    const angle = Math.random() * Math.PI * 2;
+                                    const distance = 30 + Math.random() * 50;
+                                    miniFinger.style.left = (aliens[j].x - 15 + Math.cos(angle) * distance) + 'px';
+                                    miniFinger.style.top = (aliens[j].y - 40 + Math.sin(angle) * distance) + 'px';
+                                    miniFinger.style.opacity = '0';
+                                    
+                                    // Remove after animation
+                                    setTimeout(() => miniFinger.remove(), 500);
+                                }, 10);
+                            }
+                        }, 300);
+
+                        // Remove bullet and alien
+                        game.removeChild(bullets[i].element);
+                        game.removeChild(aliens[j].element);
+                        bullets.splice(i, 1);
+                        aliens.splice(j, 1);
+                        score += points;
+                        scoreDisplay.textContent = 'Score: ' + score;
+                        
+                        // Check win condition
+                        if (aliens.length === 0) {
+                            currentLevel++;
+                            alienSpeed = Math.min(0.07 + (currentLevel * 0.03), maxLevelSpeed); // 10x slower base and increment
+                            showLevelTransition();
+                            createAliens();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        
+        // Game loop
+        function gameLoop() {
+            if (!gameOver) {
+                moveBullets();
+                moveAliens();
+                checkCollisions();
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        // Ground emojis animation
+        const groundEmojis = ['👾', '👽', '🤖', '👹', '👻'];
+        const groundElements = [];
+        
+        function createGroundEmojis() {
+            for (let i = 0; i < 10; i++) {
+                const emoji = document.createElement('div');
+                emoji.className = 'ground-emoji';
+                emoji.textContent = groundEmojis[Math.floor(Math.random() * groundEmojis.length)];
+                emoji.style.left = (Math.random() * 600) + 'px';
+                emoji.style.animationDelay = (Math.random() * 5) + 's';
+                document.getElementById('ground-container').appendChild(emoji);
+                groundElements.push({
+                    element: emoji,
+                    x: Math.random() * 600,
+                    speed: 1 + Math.random() * 3
+                });
+            }
+        }
+        
+        function animateGround() {
+            for (let emoji of groundElements) {
+                emoji.x += emoji.speed;
+                if (emoji.x > 650) {
+                    emoji.x = -50;
+                }
+                emoji.element.style.left = emoji.x + 'px';
+            }
+            requestAnimationFrame(animateGround);
+        }
+        
+        // Level transition
+        function showLevelTransition() {
+            const transition = document.createElement('div');
+            transition.id = 'level-transition';
+            transition.style.position = 'fixed';
+            transition.style.top = '0';
+            transition.style.left = '0';
+            transition.style.width = '100%';
+            transition.style.height = '100%';
+            transition.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            transition.style.display = 'flex';
+            transition.style.flexDirection = 'column';
+            transition.style.justifyContent = 'center';
+            transition.style.alignItems = 'center';
+            transition.style.zIndex = '10000';
+            transition.style.color = 'white';
+            transition.style.fontSize = '36px';
+            transition.innerHTML = `<h2>LEVEL ${currentLevel}</h2>`;
+            document.body.appendChild(transition);
+            setTimeout(() => transition.remove(), 2000);
+        }
+
+        // Game over screen
+        function showGameOver(didWin) {
+            const gameOver = document.getElementById('game-over');
+            const title = document.getElementById('game-over-title');
+            const message = document.getElementById('game-over-message');
+            const finalScore = document.getElementById('final-score');
+            
+            if (didWin) {
+                title.textContent = 'You Win!';
+                message.textContent = 'All aliens defeated!';
+            } else {
+                title.textContent = 'Game Over';
+                message.textContent = 'The aliens got you!';
+            }
+            
+            finalScore.textContent = `Final Score: ${score}`;
+            gameOver.style.display = 'flex';
+        }
+
+        document.getElementById('play-again').addEventListener('click', function() {
+            document.getElementById('game-over').style.display = 'none';
+            resetGame();
+        });
+
+        function resetGame() {
+            // Clear existing game elements
+            while (game.firstChild) {
+                game.removeChild(game.firstChild);
+            }
+            game.appendChild(player);
+            
+            // Reset game state
+            playerX = 300;
+            score = 0;
+            aliens = [];
+            bullets = [];
+            gameOver = false;
+            alienSpeed = 1;
+            
+            // Update score display
+            scoreDisplay.textContent = 'Score: 0';
+            
+            // Start new game
+            createAliens();
+            gameLoop();
+        }
+
+        // Menu controls
+        document.getElementById('start-btn').addEventListener('click', function() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('game').style.display = 'block';
+            document.getElementById('score').style.display = 'block';
+            
+            // Initialize game
+            stopPeeking();
+            createAliens();
+            document.addEventListener('keydown', movePlayer);
+            gameLoop();
+        });
+
+        function returnToMenu() {
+            document.getElementById('menu').style.display = 'block';
+            document.getElementById('game').style.display = 'none';
+            document.getElementById('score').style.display = 'none';
+            startPeeking();
+        }
+        
+        // Create stars
+        function createStars() {
+            for (let i = 0; i < 200; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = (Math.random() * 3) + 'px';
+                star.style.height = star.style.width;
+                star.style.left = (Math.random() * 100) + 'vw';
+                star.style.top = (Math.random() * 100) + 'vh';
+                star.style.animationDelay = (Math.random() * 2) + 's';
+                document.body.appendChild(star);
+            }
+        }
+
+        // Alien peek animation
+        function alienPeek() {
+            const peekEmojis = ['👽', '👾', '👻'];
+            const sides = ['left', 'right', 'top'];
+            const side = sides[Math.floor(Math.random() * sides.length)];
+            const alien = document.createElement('div');
+            alien.textContent = peekEmojis[Math.floor(Math.random() * peekEmojis.length)];
+            alien.style.position = 'fixed';
+            alien.style.fontSize = '40px';
+            alien.style.transition = 'all 0.3s';
+            alien.style.zIndex = '1000';
+            
+            const peekDuration = 1500 + Math.random() * 2000; // 1.5-3.5 seconds
+            const peekDistance = 20 + Math.random() * 30; // 20-50 pixels
+            
+            if (side === 'left') {
+                alien.style.left = '-50px';
+                alien.style.top = Math.random() * 100 + 'vh';
+            } else if (side === 'right') {
+                alien.style.right = '-50px';
+                alien.style.top = Math.random() * 100 + 'vh';
+            } else {
+                alien.style.top = '-50px';
+                alien.style.left = Math.random() * 100 + 'vw';
+            }
+            
+            document.body.appendChild(alien);
+            
+            setTimeout(() => {
+                if (side === 'left') alien.style.left = peekDistance + 'px';
+                else if (side === 'right') alien.style.right = peekDistance + 'px';
+                else alien.style.top = peekDistance + 'px';
+                
+                setTimeout(() => {
+                    if (side === 'left') alien.style.left = '-50px';
+                    else if (side === 'right') alien.style.right = '-50px';
+                    else alien.style.top = '-50px';
+                    
+                    setTimeout(() => {
+                        alien.remove();
+                    }, 500);
+                }, peekDuration);
+            }, 100);
+        }
+
+        // Title typing effect
+        function typeTitle() {
+            const title = document.querySelector('h1');
+            const text = 'Emoji Space Invaders';
+            title.textContent = '';
+            
+            for (let i = 0; i < text.length; i++) {
+                setTimeout(() => {
+                    title.textContent += text[i];
+                }, i * 100);
+            }
+        }
+
+        let peekInterval;
+        
+        function startPeeking() {
+            peekInterval = setInterval(alienPeek, 3000);
+        }
+        
+        function stopPeeking() {
+            clearInterval(peekInterval);
+        }
+
+        // Initialize menu
+        createStars();
+        createGroundEmojis();
+        animateGround();
+        typeTitle();
+        startPeeking();
+    </script>
+</body>
+</html>
