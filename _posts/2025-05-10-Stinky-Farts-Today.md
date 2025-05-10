@@ -4,7 +4,6 @@ title: Stinky Farts Today
 subtitle: Exploring the World of Farts
 tags: [personal blog]
 author: BurntPineapple
-date: 2025-05-10 10:00:00 -0700
 excerpt_separator: "<!--more-->"
 ---
 
