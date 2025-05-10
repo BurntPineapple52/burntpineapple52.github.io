@@ -4,7 +4,6 @@ title: Why Do Farts Sound So Different Every Time?
 subtitle: Why the Toot Tunes Change
 tags: [farts, humor, science, personal blog]
 author: BurntPineapple
-date: 2025-05-10 10:00:00 -0700
 ---
 
 # Why Do Farts Sound So Different Every Time?
