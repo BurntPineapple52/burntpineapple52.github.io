@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Smolagents, Blogging, and the Quest for LLM Observability: Notes from the Lab
+title: "Smolagents, Blogging, and the Quest for LLM Observability: Notes from the Lab"
 tags: [smolagents, blogging, llm, observability, aider, github]
 categories: [ai, automation]
 excerpt_separator: <!--more-->

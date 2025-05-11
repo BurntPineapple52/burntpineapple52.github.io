@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Joni: The Shockingly Cute Baby Overlord
+title: "Joni: The Shockingly Cute Baby Overlord"
 date: 2025-05-10
 categories: [babies, cute]
 tags: [joni, cute, baby, overlord]
