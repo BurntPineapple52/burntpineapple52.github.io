@@ -35,9 +35,10 @@ document.querySelector('.responsive-game-container iframe').addEventListener('ke
 .responsive-game-container {
   position: relative;
   width: 100%;
-  padding-bottom: 75%;
-  height: 0;
+  height: 600px;
   overflow: hidden;
+  border: 1px solid #ccc;
+  background: #000;
 }
 </style>
 
