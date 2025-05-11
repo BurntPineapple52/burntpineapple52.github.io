@@ -34,11 +34,12 @@ document.querySelector('.responsive-game-container iframe').addEventListener('ke
 <style>
 .responsive-game-container {
   position: relative;
-  width: 100%;
+  width: 90%;
   height: 600px;
   overflow: hidden;
   border: 1px solid #ccc;
   background: #000;
+  margin: 0 auto;
 }
 </style>
 
