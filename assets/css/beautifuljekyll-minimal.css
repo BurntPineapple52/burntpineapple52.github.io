@@ -1,5 +1,7 @@
 .main-content {
-  padding-bottom: 3.125rem;
+  padding: 0 5% 3.125rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 footer.footer-min {
