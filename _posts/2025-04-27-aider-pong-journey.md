@@ -51,7 +51,7 @@ document.querySelector('.responsive-game-container iframe').addEventListener('ke
 .responsive-game-container {
   position: relative;
   width: 100%;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  padding-bottom: 100%; /* 1:1 aspect ratio for this game */
   height: 0;
   overflow: hidden;
   margin-bottom: 2rem;
