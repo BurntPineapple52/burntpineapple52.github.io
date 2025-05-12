@@ -4,6 +4,7 @@ title: "Breakout Development with Aider"
 date: 2025-04-27 12:00:00 -0700
 categories: [coding, ai]
 tags: [aider, html5, javascript, games]
+full-width: true
 ---
 
 Development started on the Breakout. The current implementation includes:

@@ -5,6 +5,7 @@ subtitle: "From vulgar snake to even more vulgar pong"
 categories: [coding, ai, games]
 tags: [aider, html5, javascript, pong] 
 author: BurntPineapple
+full-width: true
 ---
 
 # Pong But Make It Toxic
